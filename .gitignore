@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Compiled frontend output (rebuilt with npm run build)
+client/dist/
+
+# PyInstaller & Inno Setup builds
+build/
+dist/
+dist_installer/
+*.spec
+
+# Python cache & environments
+__pycache__/
+server/__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
