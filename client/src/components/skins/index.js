@@ -23,9 +23,9 @@ export const CLUSTER_SKINS = [
   {
     id: 'model1_aero_dual',
     number: 1,
-    name: '1. Aero Dual Minimal (Foto 1)',
-    category: 'Foto',
-    description: 'Cluster duplo em ciano e verde, arco de cruzeiro e relógio hexagonal.',
+    name: '1. Aero Dual Pro (Foto 1)',
+    category: 'Profissional',
+    description: 'Cluster duplo esportivo com acabamento 3D profundo, arcos luminosos neon em ciano e verde, sub-medidores e relógio trapezoidal.',
     accentColor: '#38bdf8',
     Component: SkinAeroDual,
   },

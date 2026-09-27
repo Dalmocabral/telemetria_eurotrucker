@@ -201,51 +201,107 @@
 }
 
 /* ==========================================================================
-   MODELO 1: AERO DUAL MINIMAL (FOTO 1)
+   MODELO 1: AERO DUAL PRO (FOTO 1 - ACABAMENTO 3D REALISTA E SOMBREAMENTO)
    ========================================================================== */
 .skin-aero-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 980px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .skin-aero-cluster-housing {
-  background: radial-gradient(circle at center, #0f172a 0%, #060912 100%);
+  background: radial-gradient(ellipse at 50% 30%, #111d38 0%, #0a1122 55%, #040710 100%);
   border: 4px solid #1e293b;
   border-radius: 90px;
-  padding: 16px 28px 24px 28px;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8), 0 10px 40px rgba(0, 0, 0, 0.6);
+  padding: 44px 28px 20px 28px;
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.92),
+    inset 0 2px 1px rgba(255, 255, 255, 0.12),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(37, 99, 235, 0.25);
   position: relative;
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
-.aero-top-signals {
+/* Ponte Central Superior com Setas Chevron Duplas */
+.aero-top-signals-bridge {
   position: absolute;
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #040712;
+  border: 1.5px solid #1e3a8a;
+  padding: 4px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  z-index: 15;
 }
 
-.aero-dial {
-  position: relative;
-  width: 320px;
-  height: 320px;
-  max-width: 44vw;
-  max-height: 44vw;
+.aero-signal-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.signal-active-left polygon,
+.signal-active-right polygon {
+  filter: drop-shadow(0 0 8px #10b981) drop-shadow(0 0 16px #34d399);
+}
+
+.aero-bridge-status-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #334155;
+}
+
+.aero-micro-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.icon-green { color: #10b981 !important; filter: drop-shadow(0 0 6px #10b981); }
+.icon-blue { color: #3b82f6 !important; filter: drop-shadow(0 0 6px #3b82f6); }
+.icon-red { color: #ef4444 !important; filter: drop-shadow(0 0 6px #ef4444); }
+
+/* Linha dos Dois Mostradores */
+.aero-dials-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  gap: 20px;
+}
+
+/* Mostradores Circulares com Profundidade 3D (Pods Recessados) */
+.aero-dial-pod {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  max-width: 44vw;
+  max-height: 44vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.85));
+}
+
 .aero-dial-svg {
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-.aero-dial-center {
+.aero-dial-center-box {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -254,37 +310,98 @@
   flex-direction: column;
   align-items: center;
   pointer-events: none;
+  z-index: 5;
 }
 
 .aero-main-speed-val {
   font-family: var(--font-digital), sans-serif;
-  font-size: 3.8rem;
+  font-size: 4.2rem;
   font-weight: 800;
   line-height: 1;
-  text-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+  text-shadow: 0 0 25px rgba(0, 229, 255, 0.45);
+  letter-spacing: -1.5px;
+}
+
+.aero-rpm-display-val {
+  color: #38bdf8;
+  font-size: 3.6rem;
 }
 
 .aero-main-unit {
   font-family: var(--font-heading);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #38bdf8;
   margin-top: 4px;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
-.aero-rpm-color {
-  color: #38bdf8;
-}
-
-.aero-bottom-subgauge {
+/* Placa de Limite de Velocidade no Mostrador */
+.aero-speed-limit-tag {
   position: absolute;
-  bottom: 38px;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3.5px solid #dc2626;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 0.82rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  z-index: 6;
+}
+
+.overspeed-blink {
+  animation: aeroOverspeed 0.7s infinite alternate ease-in-out;
+}
+
+@keyframes aeroOverspeed {
+  0% { transform: translateX(-50%) scale(1); filter: drop-shadow(0 0 4px #ef4444); }
+  100% { transform: translateX(-50%) scale(1.15); filter: drop-shadow(0 0 12px #ff1744); }
+}
+
+/* Indicador de Piloto Automático */
+.aero-cruise-tag {
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* Sub-medidores Inferiores (Combustível e Temperatura) */
+.aero-bottom-subgauge-info {
+  position: absolute;
+  bottom: 34px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
+  background: rgba(4, 7, 18, 0.85);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  padding: 3px 12px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  z-index: 6;
 }
 
 .aero-sub-val {
@@ -294,24 +411,95 @@
   color: #ffffff;
 }
 
-.aero-bottom-clock-badge {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0b1329;
-  border: 1.5px solid #2563eb;
-  padding: 4px 18px;
-  border-radius: 6px;
-  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+.aero-sub-val small {
+  color: #64748b;
+  font-size: 0.75rem;
 }
 
-.aero-bottom-clock-badge span {
+.low-fuel-text, .hot-water-text {
+  color: #ef4444 !important;
+  font-weight: 800;
+  text-shadow: 0 0 8px #ef4444;
+}
+
+/* Relógio Trapezoidal Chanfrado (Estilo Foto 1) */
+.aero-bottom-trapezoid-clock {
+  margin-top: 10px;
+  background: linear-gradient(180deg, #0b1530 0%, #050a18 100%);
+  border: 1.5px solid #2563eb;
+  padding: 4px 22px;
+  clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.aero-bottom-trapezoid-clock span {
   font-family: var(--font-digital);
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #60a5fa;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  text-shadow: 0 0 12px rgba(96, 165, 250, 0.5);
+}
+
+/* Barra Inferior de Diagnósticos Automotivos */
+.aero-bottom-trip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  background: #040813;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 8px 16px;
+  margin-top: 14px;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.aero-trip-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.aero-cell-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.aero-trip-cell strong {
+  font-family: var(--font-digital);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.cell-alert strong {
+  color: #ef4444 !important;
+  text-shadow: 0 0 6px #ef4444;
+}
+
+@media (max-width: 860px) {
+  .aero-dials-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .aero-dial-pod {
+    width: 290px;
+    height: 290px;
+  }
+  .aero-bottom-trip-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 /* ==========================================================================
