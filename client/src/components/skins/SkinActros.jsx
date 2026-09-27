@@ -8,7 +8,6 @@ import React from 'react';
  */
 export default function SkinActros({ data }) {
   const truck = data?.truck || {};
-  const lights = data?.lights || {};
   const game = data?.game || {};
 
   const speed = Math.round(truck.speed || 0);

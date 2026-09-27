@@ -39,3 +39,8 @@ Desktop.ini
 *.suo
 *.user
 *.swp
+
+# Local TLS/SSL Certificates
+*.pem
+*.key
+*.crt

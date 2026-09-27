@@ -15,8 +15,6 @@ export default function SkinAeroDual({ data }) {
   const isOverSpeed = speed > speedLimit;
 
   const rpm = truck.rpm || 0;
-  // No painel da foto 1, o RPM vai de 0 a 9 (x1000 RPM)
-  const rpmK = (rpm / 1000).toFixed(1);
 
   const fuel = truck.fuel || 0;
   const fuelCapacity = truck.fuelCapacity || 1140;
@@ -25,12 +23,6 @@ export default function SkinAeroDual({ data }) {
   const waterTemp = Math.round(truck.waterTemperature || 85);
   // Escala de temp de 40°C a 120°C
   const tempPercent = Math.min(100, Math.max(0, ((waterTemp - 40) / 80) * 100));
-
-  // Cálculo dos arcos SVG
-  // Velocidade: 0 a 300 km/h mapeado em 240 graus
-  const speedAngle = -120 + (Math.min(300, speed) / 300) * 240;
-  // RPM: 0 a 9000 RPM mapeado em 240 graus
-  const rpmAngle = -120 + (Math.min(9000, rpm * 3.5) / 9000) * 240;
 
   return (
     <div className="skin-aero-container">

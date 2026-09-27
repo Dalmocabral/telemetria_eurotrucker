@@ -15,6 +15,7 @@ import uvicorn
 import psutil
 
 from ets2_reader import ETS2Reader
+from router import router_instance
 
 reader = ETS2Reader()
 connected_clients: Set[WebSocket] = set()
@@ -32,6 +33,10 @@ def get_local_ip() -> str:
 
 LOCAL_IP = get_local_ip()
 PORT = 8000
+USE_HTTPS = os.getenv("USE_HTTPS", "0") in ("1", "true", "True") or "--https" in sys.argv
+CERT_FILE = os.path.join(os.path.dirname(__file__), "cert.pem")
+KEY_FILE = os.path.join(os.path.dirname(__file__), "key.pem")
+HTTPS_AVAILABLE = os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE)
 
 def free_port(port: int = PORT):
     """Encontra e finaliza qualquer processo zumbi que esteja travando a porta especificada."""
@@ -52,18 +57,25 @@ def free_port(port: int = PORT):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Precarrega os dados do grafo rodoviário em segundo plano sem travar inicialização
+    asyncio.create_task(asyncio.to_thread(router_instance.load_data))
     task = asyncio.create_task(telemetry_broadcast_loop())
+    protocol = "https" if USE_HTTPS and HTTPS_AVAILABLE else "http"
     print("\n" + "="*60)
-    print("   EURO TRUCK SIMULATOR 2 - SERVIDOR DE TELEMETRIA")
+    print("   EURO TRUCK SIMULATOR 2 - TRUCKPILOT PRO SERVIDOR")
     print("="*60)
     print(f" -> IP Local detectado : {LOCAL_IP}")
-    print(f" -> Acesso no Navegador: http://{LOCAL_IP}:{PORT}")
-    print(f" -> WebSocket ativo em : ws://{LOCAL_IP}:{PORT}/ws")
+    print(f" -> Acesso no Navegador: {protocol}://{LOCAL_IP}:{PORT}")
+    print(f" -> WebSocket ativo em : {'wss' if protocol == 'https' else 'ws'}://{LOCAL_IP}:{PORT}/ws")
+    if protocol == "https":
+        print(" -> Contexto Seguro (HTTPS) ATIVO: Wake Lock nativo permitido em aparelhos móveis!")
+    else:
+        print(" -> Modo Padrão (HTTP). Para Wake Lock nativo em dispositivos remotos, use HTTPS.")
     print("="*60 + "\n")
     yield
     task.cancel()
 
-app = FastAPI(title="ETS2 Telemetry Server", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="TruckPilot Pro Telemetry Server", version="1.0.0", lifespan=lifespan)
 
 # Permitir CORS para requisições de desenvolvimento e tablets
 app.add_middleware(
@@ -76,14 +88,43 @@ app.add_middleware(
 
 @app.get("/api/info")
 def get_info():
-    """Retorna dados de rede e status da conexão com o simulador."""
+    """Retorna dados de rede e status da conexão com o simulador e do roteador."""
+    protocol = "https" if USE_HTTPS and HTTPS_AVAILABLE else "http"
     return {
         "local_ip": LOCAL_IP,
         "port": PORT,
-        "web_url": f"http://{LOCAL_IP}:{PORT}",
+        "protocol": protocol,
+        "is_https": (protocol == "https"),
+        "https_available": HTTPS_AVAILABLE,
+        "web_url": f"{protocol}://{LOCAL_IP}:{PORT}",
         "game_connected": reader.is_connected,
         "connected_clients": len(connected_clients),
+        "router_loaded": router_instance.is_loaded,
     }
+
+@app.get("/api/route")
+async def get_route(
+    start_x: float,
+    start_z: float,
+    city_dst_id: Optional[str] = None,
+    city_dst: Optional[str] = None,
+    comp_dst_id: Optional[str] = None,
+    comp_dst: Optional[str] = None,
+):
+    """
+    Calcula a rota sobre a malha oficial de rodovias do ETS2.
+    Executado em thread assíncrona para não bloquear o loop de telemetria (30 FPS).
+    """
+    route_res = await asyncio.to_thread(
+        router_instance.calculate_route,
+        start_x=start_x,
+        start_z=start_z,
+        city_dst_id=city_dst_id,
+        city_dst_name=city_dst,
+        comp_dst_id=comp_dst_id,
+        comp_dst_name=comp_dst,
+    )
+    return route_res
 
 @app.get("/api/qr")
 def get_qr_code(port: int = PORT):
@@ -159,7 +200,13 @@ if os.path.exists(dist_dir):
 def start_server():
     """Inicia o servidor liberando a porta primeiro se necessário."""
     free_port(PORT)
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning")
+    ssl_kwargs = {}
+    if USE_HTTPS and HTTPS_AVAILABLE:
+        ssl_kwargs = {
+            "ssl_keyfile": KEY_FILE,
+            "ssl_certfile": CERT_FILE,
+        }
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning", **ssl_kwargs)
     server = uvicorn.Server(config)
     server.run()
 

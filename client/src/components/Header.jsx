@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode, Wifi, WifiOff } from 'lucide-react';
+import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode } from 'lucide-react';
 
 export default function Header({ 
   viewMode, 

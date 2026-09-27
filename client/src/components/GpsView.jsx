@@ -1,27 +1,26 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Protocol, PMTiles } from 'pmtiles';
+import { Protocol } from 'pmtiles';
 import { 
   Crosshair, ZoomIn, ZoomOut, 
   ArrowUp, ArrowUpRight, ArrowRight, ArrowUpLeft, ArrowLeft,
-  CornerDownRight, CornerDownLeft, RotateCcw, Route, Compass,
+  CornerDownRight, CornerDownLeft, RotateCcw, Route,
   Volume2, VolumeX, ShieldAlert,
-  Flag, Fuel, Moon, Clock, ChevronLeft, ChevronUp,
-  Camera, Zap, Layers, MapPin
+  Flag, Fuel, Moon, Clock, ChevronLeft,
+  Camera, Zap, Layers, Info, X, RefreshCw
 } from 'lucide-react';
-import { requestScreenWakeLock, releaseScreenWakeLock } from '../utils/wakeLock';
-import { BlobSource } from '../utils/BlobSource';
+import { wakeLockManager } from '../utils/wakeLock';
 import { convertEts2ToGeo } from '../utils/ets2Geo';
 import { ETS2_SPEED_CAMERAS } from '../data/ets2_pois';
-import { ETS2_ALL_CITIES, findEts2City } from '../data/ets2_cities_full';
+import { ETS2_ALL_CITIES } from '../data/ets2_cities_full';
+import { useRoadRoute } from '../utils/useRoadRoute';
 
 // Configuração do Worker URL e do Protocolo PMTiles
 if (typeof maplibregl.setWorkerUrl === 'function') {
   maplibregl.setWorkerUrl('/assets/maplibre-gl-worker.mjs');
 }
 
-// Instância única do protocolo PMTiles
 let pmtilesProtocol = null;
 function getPmtilesProtocol() {
   if (!pmtilesProtocol) {
@@ -31,121 +30,8 @@ function getPmtilesProtocol() {
   return pmtilesProtocol;
 }
 
-/**
- * Calcula orientação de manobra, ângulo relativo e instrução para o HUD de navegação.
- */
-function getManeuverGuidance(truckX, truckZ, truckHeading, destCity, navDistance, navDistanceMeters) {
-  if (!destCity) {
-    return {
-      type: 'straight',
-      iconName: 'ArrowUp',
-      instruction: 'Siga em frente na rodovia',
-      subText: 'Navegação por bússola',
-      distanceText: navDistance ? `${navDistance} km` : 'Em rota',
-      color: '#00e5ff'
-    };
-  }
-
-  // Vetor do caminhão até a cidade de destino
-  const dx = destCity.x - truckX;
-  const dz = destCity.z - truckZ;
-  
-  // No ETS2: Norte é -Z (0°), Leste é +X (90°), Sul é +Z (180°), Oeste é -X (270°)
-  const angleToDest = (Math.atan2(dx, -dz) * 180 / Math.PI + 360) % 360;
-  
-  // Ângulo relativo: diferença entre a proa do caminhão e a direção do destino (-180° a +180°)
-  let delta = (angleToDest - truckHeading + 540) % 360 - 180;
-  
-  // Formatação de distância inteligente (metros quando < 1 km)
-  let distanceFormatted = `${navDistance || 0} km`;
-  if (typeof navDistanceMeters === 'number' && navDistanceMeters > 0) {
-    if (navDistanceMeters < 1000) {
-      distanceFormatted = `${Math.round(navDistanceMeters / 10) * 10} m`;
-    } else {
-      distanceFormatted = `${Math.round(navDistanceMeters / 1000)} km`;
-    }
-  } else if (navDistance && navDistance < 1) {
-    distanceFormatted = `${Math.round(navDistance * 1000)} m`;
-  }
-
-  // Análise de manobra baseada na orientação angular do destino em relação à proa
-  if (Math.abs(delta) <= 18) {
-    return {
-      type: 'straight',
-      iconName: 'ArrowUp',
-      instruction: `Siga em frente rumo a ${destCity.name}`,
-      subText: 'Manter velocidade de cruzeiro',
-      distanceText: distanceFormatted,
-      color: '#00e5ff'
-    };
-  } else if (delta > 18 && delta <= 50) {
-    return {
-      type: 'slight-right',
-      iconName: 'ArrowUpRight',
-      instruction: `Mantenha à direita rumo a ${destCity.name}`,
-      subText: 'Ajuste de faixa à frente',
-      distanceText: distanceFormatted,
-      color: '#38bdf8'
-    };
-  } else if (delta > 50 && delta <= 110) {
-    return {
-      type: 'right',
-      iconName: 'ArrowRight',
-      instruction: `Vire à direita na próxima saída para ${destCity.name}`,
-      subText: 'Acessar alça rodoviária à direita',
-      distanceText: distanceFormatted,
-      color: '#facc15'
-    };
-  } else if (delta > 110 && delta <= 160) {
-    return {
-      type: 'sharp-right',
-      iconName: 'CornerDownRight',
-      instruction: `Curva acentuada à direita para ${destCity.name}`,
-      subText: 'Reduza a velocidade na curva',
-      distanceText: distanceFormatted,
-      color: '#fb923c'
-    };
-  } else if (delta < -18 && delta >= -50) {
-    return {
-      type: 'slight-left',
-      iconName: 'ArrowUpLeft',
-      instruction: `Mantenha à esquerda rumo a ${destCity.name}`,
-      subText: 'Ajuste de faixa à frente',
-      distanceText: distanceFormatted,
-      color: '#38bdf8'
-    };
-  } else if (delta < -50 && delta >= -110) {
-    return {
-      type: 'left',
-      iconName: 'ArrowLeft',
-      instruction: `Vire à esquerda na próxima saída para ${destCity.name}`,
-      subText: 'Acessar alça rodoviária à esquerda',
-      distanceText: distanceFormatted,
-      color: '#facc15'
-    };
-  } else if (delta < -110 && delta >= -160) {
-    return {
-      type: 'sharp-left',
-      iconName: 'CornerDownLeft',
-      instruction: `Curva acentuada à esquerda para ${destCity.name}`,
-      subText: 'Reduza a velocidade na curva',
-      distanceText: distanceFormatted,
-      color: '#fb923c'
-    };
-  } else {
-    return {
-      type: 'u-turn',
-      iconName: 'RotateCcw',
-      instruction: `Faça retorno quando possível`,
-      subText: `Destino ${destCity.name} está no sentido oposto`,
-      distanceText: distanceFormatted,
-      color: '#f87171'
-    };
-  }
-}
-
 function renderManeuverIcon(iconName, color = '#00e5ff') {
-  const props = { size: 30, color, strokeWidth: 2.8 };
+  const props = { size: 30, color };
   switch (iconName) {
     case 'ArrowUp': return <ArrowUp {...props} />;
     case 'ArrowUpRight': return <ArrowUpRight {...props} />;
@@ -155,6 +41,8 @@ function renderManeuverIcon(iconName, color = '#00e5ff') {
     case 'ArrowLeft': return <ArrowLeft {...props} />;
     case 'CornerDownLeft': return <CornerDownLeft {...props} />;
     case 'RotateCcw': return <RotateCcw {...props} />;
+    case 'Flag': return <Flag {...props} />;
+    case 'ShieldAlert': return <ShieldAlert {...props} />;
     default: return <ArrowUp {...props} />;
   }
 }
@@ -164,12 +52,15 @@ export default function GpsView({ data }) {
   const mapInstanceRef = useRef(null);
   const markerElRef = useRef(null);
 
-  // Estados de controle
-  const [navMode, setNavMode] = useState('heading-up'); // 'heading-up' (3D Condução com Pitch 58°) | 'north-up' (2D Plano)
+  // Estados de navegação
+  const [navMode, setNavMode] = useState('heading-up'); // 'heading-up' (3D) | 'north-up' (2D)
   const [followTruck, setFollowTruck] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [wakeLockActive, setWakeLockActive] = useState(false);
+
+  // Estado do Wake Lock honesto
+  const [wakeLockInfo, setWakeLockInfo] = useState(() => wakeLockManager.getStateInfo());
+  const [isWakeModalOpen, setIsWakeModalOpen] = useState(false);
 
   // Alerta antecipado de radar (com contagem regressiva em metros)
   const [approachingRadar, setApproachingRadar] = useState(null);
@@ -185,7 +76,7 @@ export default function GpsView({ data }) {
   const lastRadarAlertTimeRef = useRef(0);
 
   const truck = data?.truck || {};
-  const placement = data?.placement || { x: -5740.04, z: 29149.47, heading: 0 };
+  const placement = data?.placement || { x: -28842.0, z: 4982.0, heading: 0 };
   const nav = data?.navigation || {};
   const game = data?.game || {};
   const job = data?.job || {};
@@ -194,21 +85,26 @@ export default function GpsView({ data }) {
   const speedLimit = truck.speedLimit || 80;
   const isOverSpeed = speed > (speedLimit + 2);
 
-  // 1. Manter tela acesa 100% do tempo (NoSleep duplo: WakeLock API + Micro-vídeo H.264)
-  const activateWakeLock = useCallback(() => {
-    requestScreenWakeLock().then(active => {
-      setWakeLockActive(active);
-    }).catch(() => {});
+  // 1. Hook de Roteamento Rodoviário Oficial do ETS2
+  const {
+    routeGeoJson,
+    routeStats,
+    destinationInfo,
+    maneuvers,
+    routeStatus,
+    routeError,
+    recalculateRoute,
+  } = useRoadRoute(placement, job, true);
+
+  // 2. Inscrição unificada no WakeLockManager
+  useEffect(() => {
+    const unsubscribe = wakeLockManager.subscribe((info) => {
+      setWakeLockInfo(info);
+    });
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    activateWakeLock();
-    return () => {
-      releaseScreenWakeLock();
-    };
-  }, [activateWakeLock]);
-
-  // 2. Síntese de voz em Português (Exclusivo para avisos de radares)
+  // 3. Síntese de voz em Português (Exclusivo para avisos de radares e navegação)
   const speakVoice = useCallback((text) => {
     if (!voiceEnabled || !window.speechSynthesis) return;
     try {
@@ -225,41 +121,42 @@ export default function GpsView({ data }) {
     }
   }, [voiceEnabled]);
 
-  // Cálculo Dinâmico de Orientação de Rota e Próxima Manobra (Setas e Distância)
-  const destCity = useMemo(() => {
-    return findEts2City(job?.cityDestination);
-  }, [job?.cityDestination]);
-
-  const maneuver = useMemo(() => {
-    const currentH = currentHeadingRef.current || placement.heading || 0;
-    return getManeuverGuidance(
-      placement.x, 
-      placement.z, 
-      currentH, 
-      destCity, 
-      nav?.distance, 
-      nav?.distanceMeters
-    );
-  }, [placement.x, placement.z, placement.heading, destCity, nav?.distance, nav?.distanceMeters]);
-
-  // Enquadrar a rota inteira do caminhão até a cidade de destino
+  // Enquadrar a rota rodoviária completa do caminhão até a empresa/cidade de destino
   const fitRouteToBounds = useCallback(() => {
-    if (destCity && mapInstanceRef.current && currentPosRef.current) {
-      const destGeo = convertEts2ToGeo(destCity.x, destCity.z);
+    if (!mapInstanceRef.current) return;
+    const coords = routeGeoJson?.geometry?.coordinates;
+    if (coords && coords.length > 1) {
+      const bounds = new maplibregl.LngLatBounds();
+      // Amostra pontos para enquadrar a curvatura completa
+      const step = Math.max(1, Math.floor(coords.length / 50));
+      for (let i = 0; i < coords.length; i += step) {
+        bounds.extend(coords[i]);
+      }
+      bounds.extend(coords[coords.length - 1]);
+      if (currentPosRef.current) {
+        bounds.extend(currentPosRef.current);
+      }
+      setFollowTruck(false);
+      mapInstanceRef.current.fitBounds(bounds, {
+        padding: { top: 130, bottom: 100, left: 80, right: 80 },
+        duration: 1000,
+        pitch: 0,
+      });
+      speakVoice(`Exibindo rota rodoviária completa até ${destinationInfo?.name || 'o destino'}.`);
+    } else if (destinationInfo?.coordinates && currentPosRef.current) {
       const bounds = new maplibregl.LngLatBounds();
       bounds.extend(currentPosRef.current);
-      bounds.extend(destGeo);
+      bounds.extend(destinationInfo.coordinates);
       setFollowTruck(false);
       mapInstanceRef.current.fitBounds(bounds, {
         padding: { top: 120, bottom: 90, left: 70, right: 70 },
         duration: 1000,
         pitch: 0,
       });
-      speakVoice(`Exibindo rota completa até ${destCity.name}.`);
     }
-  }, [destCity, speakVoice]);
+  }, [routeGeoJson, destinationInfo, speakVoice]);
 
-  // 3. Detecção em Tempo Real de Radares de Velocidade à Frente
+  // 4. Detecção em Tempo Real de Radares de Velocidade à Frente
   useEffect(() => {
     if (!placement.x && !placement.z) return;
     if (placement.x === 0 && placement.z === 0) return;
@@ -292,7 +189,7 @@ export default function GpsView({ data }) {
     }
   }, [placement.x, placement.z, speakVoice]);
 
-  // 4. Inicialização do MapLibre GL com PMTiles Vetoriais do ETS2 (TruckNav-Sim Engine)
+  // 5. Inicialização do MapLibre GL com PMTiles Vetoriais do ETS2
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -301,153 +198,75 @@ export default function GpsView({ data }) {
 
     async function setupMapLibre() {
       try {
-        // Carrega os arquivos vetoriais PMTiles na memória
-        const [roadsBlob, dataBlob] = await Promise.all([
-          fetch('/maps/ets2/map-data/tiles/roads.mp3').then(r => r.blob()),
-          fetch('/maps/ets2/map-data/tiles/map-data-combined.mp3').then(r => r.blob())
-        ]);
-
-        if (!isMounted) return;
-
-        const roadsPmtiles = new PMTiles(new BlobSource(roadsBlob, 'roads'));
-        protocol.add(roadsPmtiles);
-
-        const dataPmtiles = new PMTiles(new BlobSource(dataBlob, 'all-data'));
-        protocol.add(dataPmtiles);
-
-        const baseUrl = window.location.origin;
         const initialGeo = convertEts2ToGeo(placement.x, placement.z);
-        currentPosRef.current = initialGeo;
-        targetPosRef.current = initialGeo;
+        currentPosRef.current = [...initialGeo];
+
+        const roadsPmtiles = new PMTiles('/maps/ets2/map-data/tiles/roads.mp3');
+        const allDataPmtiles = new PMTiles('/maps/ets2/map-data/tiles/map-data-combined.mp3');
+        protocol.add(roadsPmtiles);
+        protocol.add(allDataPmtiles);
 
         const style = {
           version: 8,
-          name: "ETS2 Vector 3D",
+          glyphs: '/glyphs/{fontstack}/{range}.pbf',
+          sprite: `${window.location.origin}/sprites/ets2/sprites`,
           sources: {
-            // Rodovias (tiles vetorizados do TruckNav com overzoom automático até zoom 14)
-            'ets2': {
+            ets2: {
               type: 'vector',
-              tiles: ['pmtiles://roads/{z}/{x}/{y}'],
-              minzoom: 5,
-              maxzoom: 9,
+              url: 'pmtiles:///maps/ets2/map-data/tiles/roads.mp3',
             },
-            // Dados combinados (países, água, áreas de descanso, prefabs)
             'all-data': {
               type: 'vector',
-              tiles: ['pmtiles://all-data/{z}/{x}/{y}'],
-              minzoom: 5,
-              maxzoom: 9,
+              url: 'pmtiles:///maps/ets2/map-data/tiles/map-data-combined.mp3',
             },
           },
-          sprite: `${baseUrl}/sprites/ets2/sprites`,
-          glyphs: `${baseUrl}/glyphs/{fontstack}/{range}.pbf`,
           layers: [
-            // 1. Fundo do oceano / vácuo
             {
               id: 'background',
               type: 'background',
-              paint: {
-                'background-color': '#080d16',
-              },
+              paint: { 'background-color': '#080d1a' },
             },
-            // 2. Terreno dos países
             {
-              id: 'countries',
+              id: 'landuse',
               type: 'fill',
               source: 'all-data',
-              'source-layer': 'countries',
-              paint: {
-                'fill-color': '#111827',
-                'fill-opacity': 0.95,
-              },
+              'source-layer': 'landuse',
+              paint: { 'fill-color': '#0f172a', 'fill-opacity': 0.8 },
             },
-            // 3. Fronteiras entre países
-            {
-              id: 'country-borders',
-              type: 'line',
-              source: 'all-data',
-              'source-layer': 'countries',
-              paint: {
-                'line-color': '#2a3b52',
-                'line-width': 1.8,
-                'line-dasharray': [3, 2],
-              },
-            },
-            // 4. Água / Lagos / Costas marítimas
             {
               id: 'water',
               type: 'fill',
               source: 'all-data',
               'source-layer': 'water',
-              paint: {
-                'fill-color': '#060a12',
-              },
+              paint: { 'fill-color': '#071830', 'fill-opacity': 0.9 },
             },
             {
-              id: 'water-outline',
-              type: 'line',
-              source: 'all-data',
-              'source-layer': 'water',
-              paint: {
-                'line-color': '#142033',
-                'line-width': 2,
-              },
-            },
-            // 5. Pátios, Empresas e Áreas de Serviço (Prefabs)
-            {
-              id: 'prefab-zones',
+              id: 'prefabs',
               type: 'fill',
               source: 'all-data',
               'source-layer': 'prefabs',
-              paint: {
-                'fill-color': '#1e293b',
-                'fill-opacity': 0.85,
-              },
+              paint: { 'fill-color': '#1e293b', 'fill-opacity': 0.85 },
             },
-            // 6. Contorno exterior das rodovias (casing para visual nítido 3D)
             {
               id: 'roads-casing',
               type: 'line',
               source: 'ets2',
               'source-layer': 'ets2',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round',
-              },
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
               paint: {
                 'line-color': '#09101d',
-                'line-width': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  5, 2.2,
-                  8, 4.8,
-                  10, 9.0,
-                  13, 15.0,
-                ],
+                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.2, 8, 4.8, 10, 9.0, 13, 15.0],
               },
             },
-            // 7. Rodovias Principais (Linha vetorial luminosa)
             {
               id: 'roads',
               type: 'line',
               source: 'ets2',
               'source-layer': 'ets2',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round',
-              },
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
               paint: {
                 'line-color': '#607599',
-                'line-width': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  5, 1.4,
-                  8, 3.2,
-                  10, 6.5,
-                  13, 11.0,
-                ],
+                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.4, 8, 3.2, 10, 6.5, 13, 11.0],
                 'line-opacity': 1.0,
               },
             },
@@ -461,120 +280,70 @@ export default function GpsView({ data }) {
           zoom: 9.5,
           minZoom: 4,
           maxZoom: 14,
-          pitch: navMode === 'heading-up' ? 58 : 0, // Perspectiva 3D inclinada de condução
+          pitch: navMode === 'heading-up' ? 58 : 0,
           bearing: navMode === 'heading-up' ? (placement.heading || 0) : 0,
           attributionControl: false,
-          maxBounds: [
-            [-35, -28],
-            [35, 30],
-          ],
+          maxBounds: [[-35, -28], [35, 30]],
         });
 
         map.on('load', () => {
           if (!isMounted) return;
 
-          // 8. Linha Viva do Corredor de Navegação / Trajeto Percorrido (Neon Ciano Brilhante)
-          map.addSource('route-line-source', {
+          // 1. Rota Rodoviária Planejada (Calculada sobre a rede de estradas reais do ETS2)
+          map.addSource('planned-route-source', {
             type: 'geojson',
-            data: {
-              type: 'FeatureCollection',
-              features: [
-                {
-                  type: 'Feature',
-                  geometry: {
-                    type: 'LineString',
-                    coordinates: [initialGeo, initialGeo],
-                  },
-                },
-              ],
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          map.addLayer({
+            id: 'planned-route-casing',
+            type: 'line',
+            source: 'planned-route-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#030816',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 5.0, 8, 8.5, 11, 13.0, 14, 18.0],
+              'line-opacity': 0.9,
             },
           });
 
           map.addLayer({
-            id: 'route-line-layer',
+            id: 'planned-route-core',
             type: 'line',
-            source: 'route-line-source',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
+            source: 'planned-route-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
               'line-color': '#00e5ff',
-              'line-width': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                6, 3,
-                9, 7,
-                12, 11,
-              ],
-              'line-opacity': 0.95,
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 3.2, 8, 5.5, 11, 8.5, 14, 12.0],
+              'line-opacity': 0.98,
             },
           });
 
-          // 8.1 Linha Pontilhada de Rumo Direto ao Destino (Glowing Amber / Dourado)
-          map.addSource('guidance-line-source', {
+          // 2. Rastro Percorrido pelo Caminhão (Trajeto histórico recente em laranja)
+          map.addSource('trail-line-source', {
             type: 'geojson',
-            data: {
-              type: 'FeatureCollection',
-              features: [],
-            },
+            data: { type: 'FeatureCollection', features: [] },
           });
 
           map.addLayer({
-            id: 'guidance-line-casing',
+            id: 'trail-line-layer',
             type: 'line',
-            source: 'guidance-line-source',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
+            source: 'trail-line-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
-              'line-color': '#78350f',
-              'line-width': [
-                'interpolate', ['linear'], ['zoom'],
-                5, 3.5,
-                8, 6.5,
-                11, 10.0,
-                14, 14.0
-              ],
-              'line-opacity': 0.85,
-              'line-dasharray': [3, 2],
+              'line-color': '#f59e0b',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.0, 8, 3.5, 11, 5.0, 14, 7.0],
+              'line-opacity': 0.75,
             },
           });
 
-          map.addLayer({
-            id: 'guidance-line-core',
-            type: 'line',
-            source: 'guidance-line-source',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
-            paint: {
-              'line-color': '#facc15',
-              'line-width': [
-                'interpolate', ['linear'], ['zoom'],
-                5, 2.0,
-                8, 3.8,
-                11, 6.2,
-                14, 8.5
-              ],
-              'line-opacity': 1.0,
-              'line-dasharray': [3, 2],
-            },
-          });
-
-          // 9. Cidades Principais e Secundárias (Todas as 374 cidades do ETS2 com alta nitidez)
+          // 3. Cidades Oficiais do ETS2
           const citiesGeoJson = {
             type: 'FeatureCollection',
             features: ETS2_ALL_CITIES.map(c => ({
               type: 'Feature',
               properties: { name: c.name },
-              geometry: {
-                type: 'Point',
-                coordinates: convertEts2ToGeo(c.x, c.z),
-              },
+              geometry: { type: 'Point', coordinates: convertEts2ToGeo(c.x, c.z) },
             })),
           };
 
@@ -591,85 +360,48 @@ export default function GpsView({ data }) {
             layout: {
               'text-field': ['get', 'name'],
               'text-font': ['Commissioner'],
-              'text-size': [
-                'interpolate', ['linear'], ['zoom'],
-                6, 11,
-                8, 13,
-                11, 16
-              ],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 6, 11, 8, 13, 11, 16],
               'text-anchor': 'bottom',
-              'text-offset': [0, -0.4],
+              'text-offset': [0, -0.6],
               'text-allow-overlap': false,
-              'text-optional': true,
             },
             paint: {
-              'text-color': '#ffffff',
-              'text-halo-color': '#060a12',
-              'text-halo-width': 2.2,
+              'text-color': '#f8fafc',
+              'text-halo-color': '#020617',
+              'text-halo-width': 2.0,
             },
           });
 
-          // 10. Ícones Oficiais do ETS2 (Postos de Combustível, Oficinas, Áreas de Descanso, Pedágios)
-          map.addLayer({
-            id: 'all-sprites',
-            type: 'symbol',
-            source: 'all-data',
-            'source-layer': 'spritelocations',
-            filter: ['!=', ['get', 'poiType'], 'road'],
-            minzoom: 7,
-            layout: {
-              'icon-image': ['get', 'sprite'],
-              'icon-size': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                7, 0.7,
-                9, 1.0,
-                11, 1.35,
-              ],
-              'icon-allow-overlap': false,
-              'symbol-sort-key': ['match', ['get', 'sprite'], 'gas_ico', 1, 'service_ico', 2, 10],
-              'symbol-placement': 'point',
-            },
-          });
-
-          // 10. Radares de Velocidade (Pontos no mapa com alertas)
-          const radarsGeoJson = {
-            type: 'FeatureCollection',
-            features: ETS2_SPEED_CAMERAS.map(cam => ({
-              type: 'Feature',
-              properties: { name: cam.name, limit: `${cam.limit}` },
-              geometry: {
-                type: 'Point',
-                coordinates: convertEts2ToGeo(cam.x, cam.z),
-              },
-            })),
-          };
-
+          // 4. Radares de Velocidade Finais (Avisos Visuais)
           map.addSource('radars-source', {
             type: 'geojson',
-            data: radarsGeoJson,
+            data: {
+              type: 'FeatureCollection',
+              features: ETS2_SPEED_CAMERAS.map(cam => ({
+                type: 'Feature',
+                properties: { limit: cam.limit },
+                geometry: { type: 'Point', coordinates: convertEts2ToGeo(cam.x, cam.z) },
+              })),
+            },
           });
 
           map.addLayer({
             id: 'radars-layer',
             type: 'circle',
             source: 'radars-source',
+            minzoom: 8,
             paint: {
-              'circle-radius': 7,
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 11, 7],
               'circle-color': '#ef4444',
               'circle-stroke-color': '#ffffff',
               'circle-stroke-width': 2,
             },
           });
 
-          // 11. Destino do Frete / Rota (Ponto Dourado Pulsante + Rótulo)
+          // 5. Destino Final da Entrega / Empresa (Ponto Dourado Pulsante)
           map.addSource('destination-source', {
             type: 'geojson',
-            data: {
-              type: 'FeatureCollection',
-              features: [],
-            },
+            data: { type: 'FeatureCollection', features: [] },
           });
 
           map.addLayer({
@@ -720,7 +452,7 @@ export default function GpsView({ data }) {
           setMapLoaded(true);
         });
 
-        // Marcador do Caminhão em 3D (Seta Neon Ciano compacta e nítida)
+        // Marcador 3D do Caminhão
         const markerDiv = document.createElement('div');
         markerDiv.className = 'truck-marker-3d-pin';
         markerDiv.innerHTML = `
@@ -775,7 +507,49 @@ export default function GpsView({ data }) {
     };
   }, []);
 
-  // 5. Atualização de Alvos da Telemetria (Converte para WGS84 Geo)
+  // 6. Atualização da Rota Rodoviária Planejada no MapLibre GL
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const source = mapInstanceRef.current.getSource('planned-route-source');
+    if (source) {
+      if (routeGeoJson) {
+        source.setData(routeGeoJson);
+      } else {
+        source.setData({ type: 'FeatureCollection', features: [] });
+      }
+    }
+  }, [routeGeoJson, mapLoaded]);
+
+  // 7. Atualização do Destino e Empresa no MapLibre GL
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const destSource = mapInstanceRef.current.getSource('destination-source');
+    if (destSource) {
+      if (destinationInfo && destinationInfo.coordinates) {
+        const labelText = destinationInfo.is_company 
+          ? `🏢 ${destinationInfo.name} (${destinationInfo.city})`
+          : `🏁 ${destinationInfo.name}${destinationInfo.is_approximate ? ' (Aprox.)' : ''}`;
+
+        destSource.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: { name: labelText },
+              geometry: {
+                type: 'Point',
+                coordinates: destinationInfo.coordinates,
+              },
+            },
+          ],
+        });
+      } else {
+        destSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+    }
+  }, [destinationInfo, mapLoaded]);
+
+  // 8. Atualização de Alvos da Telemetria e Rastro Percorrido
   useEffect(() => {
     if (placement.x === 0 && placement.z === 0) return;
     const target = convertEts2ToGeo(placement.x, placement.z);
@@ -785,7 +559,7 @@ export default function GpsView({ data }) {
       targetHeadingRef.current = placement.heading;
     }
 
-    // Registra rastro percorrido nas estradas e alinha orientação em movimento
+    // Registra rastro percorrido nas estradas
     const currentBreadcrumbs = breadcrumbsRef.current;
     const lastPoint = currentBreadcrumbs[currentBreadcrumbs.length - 1];
     if (!lastPoint) {
@@ -796,7 +570,6 @@ export default function GpsView({ data }) {
       const dist = Math.hypot(dLon, dLat);
 
       if (dist > 0.00015 && speed > 2.0) {
-        // Alinha a orientação do caminhão com o vetor de avanço real nas curvas
         const moveAngle = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
         let diffMove = (moveAngle - targetHeadingRef.current + 540) % 360 - 180;
         if (Math.abs(diffMove) < 70) {
@@ -804,30 +577,21 @@ export default function GpsView({ data }) {
         }
 
         breadcrumbsRef.current.push(target);
-        if (breadcrumbsRef.current.length > 80) {
+        if (breadcrumbsRef.current.length > 100) {
           breadcrumbsRef.current.shift();
         }
 
-        // Atualiza a linha viva no MapLibre GL
         if (mapInstanceRef.current && mapLoaded) {
-          const source = mapInstanceRef.current.getSource('route-line-source');
-          if (source) {
-            // Estende vetor para a pista à frente
-            const headingRad = ((targetHeadingRef.current || 0) * Math.PI) / 180;
-            const aheadDist = 0.0018; // ~200 metros na projeção WGS84
-            const pAhead = [
-              target[0] + Math.sin(headingRad) * aheadDist,
-              target[1] + Math.cos(headingRad) * aheadDist,
-            ];
-
-            source.setData({
+          const trailSource = mapInstanceRef.current.getSource('trail-line-source');
+          if (trailSource && breadcrumbsRef.current.length > 1) {
+            trailSource.setData({
               type: 'FeatureCollection',
               features: [
                 {
                   type: 'Feature',
                   geometry: {
                     type: 'LineString',
-                    coordinates: [...breadcrumbsRef.current, pAhead],
+                    coordinates: breadcrumbsRef.current,
                   },
                 },
               ],
@@ -838,66 +602,7 @@ export default function GpsView({ data }) {
     }
   }, [placement.x, placement.z, placement.heading, speed, mapLoaded]);
 
-  // 5.1 Atualização da Linha Pontilhada de Rumo e Marcador do Destino
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return;
-    if (placement.x === 0 && placement.z === 0) return;
-
-    const guidanceSource = mapInstanceRef.current.getSource('guidance-line-source');
-    const destSource = mapInstanceRef.current.getSource('destination-source');
-
-    if (destCity) {
-      const truckGeo = convertEts2ToGeo(placement.x, placement.z);
-      const destGeo = convertEts2ToGeo(destCity.x, destCity.z);
-
-      // Atualiza a Linha Pontilhada de Rumo Direto até a Cidade de Destino
-      if (guidanceSource) {
-        guidanceSource.setData({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: [truckGeo, destGeo],
-              },
-            },
-          ],
-        });
-      }
-
-      // Atualiza o Marcador de Destino com Distância e Carga
-      if (destSource) {
-        const distLabel = nav?.distance ? `${nav.distance} km` : '';
-        const cargoLabel = job?.cargo && job.cargo !== 'Sem Carga' ? ` • ${job.cargo}` : '';
-        destSource.setData({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              properties: {
-                name: `🏁 ${destCity.name} (${distLabel}${cargoLabel})`,
-              },
-              geometry: {
-                type: 'Point',
-                coordinates: destGeo,
-              },
-            },
-          ],
-        });
-      }
-    } else {
-      // Sem destino ativo: limpa a linha pontilhada e pino
-      if (guidanceSource) {
-        guidanceSource.setData({ type: 'FeatureCollection', features: [] });
-      }
-      if (destSource) {
-        destSource.setData({ type: 'FeatureCollection', features: [] });
-      }
-    }
-  }, [placement.x, placement.z, destCity, job?.cargo, nav?.distance, mapLoaded]);
-
-  // 6. LOOP DE CÂMERA 3D A 60 FPS (LERP + JUMPTO): ULTRA-SUAVE
+  // 9. LOOP DE CÂMERA 3D A 60 FPS (LERP + JUMPTO)
   useEffect(() => {
     const renderLoop = () => {
       try {
@@ -906,14 +611,12 @@ export default function GpsView({ data }) {
           const targetLat = targetPosRef.current[1];
 
           if (isFinite(targetLon) && isFinite(targetLat)) {
-            // LERP de posição
             currentPosRef.current[0] += (targetLon - currentPosRef.current[0]) * 0.18;
             currentPosRef.current[1] += (targetLat - currentPosRef.current[1]) * 0.18;
 
             const currentPos = [currentPosRef.current[0], currentPosRef.current[1]];
             markerElRef.current.setLngLat(currentPos);
 
-            // Suavização do heading (com normalização em 360°)
             const targetH = targetHeadingRef.current || 0;
             let diff = (targetH - currentHeadingRef.current + 540) % 360 - 180;
             currentHeadingRef.current = (currentHeadingRef.current + diff * 0.15 + 360) % 360;
@@ -923,7 +626,6 @@ export default function GpsView({ data }) {
 
             if (followTruck) {
               if (navMode === 'heading-up') {
-                // Modo Condução 3D: Câmera inclinada a 58° girando suavemente junto com a cabine
                 map.jumpTo({
                   center: currentPos,
                   bearing: heading,
@@ -931,7 +633,6 @@ export default function GpsView({ data }) {
                 });
                 markerElRef.current.setRotation(0);
               } else {
-                // Modo Norte Fixo: Visão de satélite plana (Pitch 0°)
                 map.jumpTo({
                   center: currentPos,
                   bearing: 0,
@@ -970,6 +671,63 @@ export default function GpsView({ data }) {
     }
   };
 
+  // 10. Cálculo da Instrução de Manobra Real da Rota Viária
+  const maneuver = useMemo(() => {
+    if (routeStatus === 'loading') {
+      return {
+        type: 'loading',
+        iconName: 'RotateCcw',
+        instruction: 'Calculando rota pelas rodovias...',
+        subText: destinationInfo?.name ? `Destino: ${destinationInfo.name}` : 'Consultando rede viária do ETS2',
+        distanceText: 'Calculando...',
+        color: '#38bdf8',
+      };
+    }
+
+    if (routeStatus === 'error') {
+      return {
+        type: 'error',
+        iconName: 'ShieldAlert',
+        instruction: 'Rota rodoviária indisponível',
+        subText: routeError || 'Verifique se a rodovia está mapeada',
+        distanceText: nav?.distance ? `${nav.distance} km` : 'Sem rota',
+        color: '#ef4444',
+      };
+    }
+
+    if (maneuvers && maneuvers.length > 0) {
+      const m = maneuvers[0];
+      let iconName = 'ArrowUp';
+      let color = '#00e5ff';
+
+      if (m.type === 'right') { iconName = 'ArrowRight'; color = '#38bdf8'; }
+      else if (m.type === 'left') { iconName = 'ArrowLeft'; color = '#38bdf8'; }
+      else if (m.type === 'slight-right') { iconName = 'ArrowUpRight'; color = '#00e5ff'; }
+      else if (m.type === 'slight-left') { iconName = 'ArrowUpLeft'; color = '#00e5ff'; }
+      else if (m.type === 'sharp-right') { iconName = 'CornerDownRight'; color = '#f59e0b'; }
+      else if (m.type === 'sharp-left') { iconName = 'CornerDownLeft'; color = '#f59e0b'; }
+      else if (m.type === 'destination') { iconName = 'Flag'; color = '#10b981'; }
+
+      return {
+        type: m.type,
+        iconName,
+        instruction: m.instruction,
+        subText: destinationInfo?.description || 'Siga pela rodovia',
+        distanceText: m.distance > 0 ? `${m.distance} m` : (routeStats?.distance_km ? `${routeStats.distance_km} km` : 'Em rota'),
+        color,
+      };
+    }
+
+    return {
+      type: 'straight',
+      iconName: 'ArrowUp',
+      instruction: destinationInfo ? `Siga para ${destinationInfo.name}` : 'Siga pelas rodovias',
+      subText: destinationInfo?.is_approximate ? 'Destino aproximado (centro da cidade)' : 'Navegação rodoviária',
+      distanceText: routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav?.distance ? `${nav.distance} km` : '--'),
+      color: '#00e5ff',
+    };
+  }, [routeStatus, routeError, maneuvers, destinationInfo, routeStats, nav?.distance]);
+
   return (
     <div className="gps-container gps-clean-theme">
       {/* 1. Barra de Status Superior */}
@@ -983,14 +741,15 @@ export default function GpsView({ data }) {
             <ChevronLeft size={22} />
           </button>
           
-          {/* Botão de Trava de Tela Sempre Ativa */}
+          {/* Botão Honesto de Trava de Tela Sempre Ativa */}
           <button 
-            className={`wake-lock-pill-btn ${wakeLockActive ? 'wake-active' : ''}`}
-            onClick={activateWakeLock}
-            title="Clique para garantir que a tela nunca apagará"
+            id="btn-wake-lock-status"
+            className={`wake-lock-pill-btn wake-${wakeLockInfo.type}`}
+            onClick={() => setIsWakeModalOpen(true)}
+            title="Clique para ver detalhes do bloqueio de tela"
           >
             <Zap size={14} />
-            <span>{wakeLockActive ? 'Tela Travada 100%' : 'Ativar Tela Acesa'}</span>
+            <span>{wakeLockInfo.label}</span>
           </button>
         </div>
 
@@ -1018,7 +777,7 @@ export default function GpsView({ data }) {
         <div ref={mapContainerRef} className="maplibre-container-root" />
       </div>
 
-      {/* 3. Card Flutuante de Manobra Superior (Estilo Waze / Google Maps) */}
+      {/* 3. Card Flutuante de Manobra Superior */}
       <div className="gps-maneuver-card">
         <div 
           className="maneuver-icon-box"
@@ -1041,6 +800,15 @@ export default function GpsView({ data }) {
             {maneuver.subText}
           </div>
         </div>
+        {routeStatus === 'error' && (
+          <button 
+            className="route-retry-mini-btn"
+            onClick={recalculateRoute}
+            title="Tentar recalcular rota viária"
+          >
+            <RefreshCw size={16} />
+          </button>
+        )}
       </div>
 
       {/* 4. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
@@ -1059,7 +827,7 @@ export default function GpsView({ data }) {
         </div>
       )}
 
-      {/* 5. Alerta Visual Silencioso de Velocidade Excedida (Sem Voz) */}
+      {/* 5. Alerta Visual Silencioso de Velocidade Excedida */}
       {isOverSpeed && !approachingRadar && (
         <div className="visual-speeding-warning-pill">
           <ShieldAlert size={18} color="#ff1744" />
@@ -1078,18 +846,19 @@ export default function GpsView({ data }) {
         </div>
       </div>
 
-      {/* 7. Card Inferior de Destino / ETA */}
+      {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária */}
       <div className="gps-bottom-destination-card">
         <div className="destination-badge-yellow">
           <Flag size={16} color="#ffffff" />
           <span className="dest-text">
-            {destCity ? `${destCity.name}: ` : (job?.cityDestination ? `${job.cityDestination}: ` : '')}
-            {nav.distance ? `${nav.distance} km` : '0 km'} • {nav.time || '--:--'}
+            {destinationInfo ? `${destinationInfo.name}: ` : (job?.cityDestination ? `${job.cityDestination}: ` : '')}
+            {routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav.distance ? `${nav.distance} km` : '0 km')} • {nav.time || '--:--'}
             {job?.cargo && job.cargo !== 'Sem Carga' ? ` (${job.cargo})` : ''}
           </span>
           <button 
+            id="btn-gps-fit-route-bottom"
             className="dest-expand-btn" 
-            title="Enquadrar Rota Completa"
+            title="Enquadrar Rota Rodoviária Completa"
             onClick={fitRouteToBounds}
           >
             <Route size={16} />
@@ -1099,7 +868,17 @@ export default function GpsView({ data }) {
 
       {/* 8. Coluna de Controles Flutuantes à Direita */}
       <div className="gps-controls-column">
-        {/* Enquadrar Rota Completa do Caminhão ao Destino */}
+        {/* Recalcular Rota Manualmente */}
+        <button 
+          id="btn-gps-recalculate"
+          className={`gps-pill-btn ${routeStatus === 'loading' ? 'btn-spinning' : ''}`}
+          onClick={recalculateRoute}
+          title="Recalcular Rota pelas Estradas"
+        >
+          <RefreshCw size={22} color="#00e5ff" />
+        </button>
+
+        {/* Enquadrar Rota Completa */}
         <button 
           id="btn-gps-fit-route"
           className="gps-pill-btn" 
@@ -1109,7 +888,7 @@ export default function GpsView({ data }) {
           <Route size={22} color="#facc15" />
         </button>
 
-        {/* Alternar Modo 3D Condução (Pitch 58°) vs Modo 2D Norte Fixo */}
+        {/* Alternar Modo 3D vs 2D */}
         <button 
           id="btn-gps-navmode"
           className={`gps-pill-btn ${navMode === 'heading-up' ? 'active-cyan' : ''}`} 
@@ -1146,9 +925,9 @@ export default function GpsView({ data }) {
           onClick={() => {
             const next = !voiceEnabled;
             setVoiceEnabled(next);
-            if (next) speakVoice('Avisos de radares ativados.');
+            if (next) speakVoice('Avisos de voz ativados.');
           }}
-          title={voiceEnabled ? "Silenciar avisos de radar" : "Ativar avisos de radar"}
+          title={voiceEnabled ? "Silenciar avisos de voz" : "Ativar avisos de voz"}
         >
           {voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
         </button>
@@ -1174,6 +953,80 @@ export default function GpsView({ data }) {
         </button>
       </div>
 
+      {/* 9. Modal Informativo e Honesto de Wake Lock (Tela Ativa) */}
+      {isWakeModalOpen && (
+        <div className="wake-modal-backdrop" onClick={() => setIsWakeModalOpen(false)}>
+          <div className="wake-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="wake-modal-header">
+              <div className="wake-modal-title">
+                <Zap size={20} color="#00e5ff" />
+                <h3>Controle de Tela Sempre Ativa</h3>
+              </div>
+              <button 
+                className="wake-modal-close" 
+                onClick={() => setIsWakeModalOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="wake-modal-body">
+              <div className={`wake-status-badge badge-${wakeLockInfo.type}`}>
+                <strong>Estado:</strong> {wakeLockInfo.label}
+              </div>
+
+              <p className="wake-modal-detail">
+                {wakeLockInfo.detail}
+              </p>
+
+              <div className="wake-tech-info">
+                <div>
+                  <span>Contexto Seguro (HTTPS):</span>
+                  <strong>{wakeLockInfo.isSecureContext ? 'Sim (Permite API Nativa)' : 'Não (HTTP Comum)'}</strong>
+                </div>
+                <div>
+                  <span>Screen Wake Lock API:</span>
+                  <strong>{wakeLockInfo.isNativeSupported ? 'Suportada' : 'Não Suportada'}</strong>
+                </div>
+                <div>
+                  <span>Vídeo Auxiliar em Loop:</span>
+                  <strong>{wakeLockInfo.isMedia ? 'Em Reprodução' : (wakeLockInfo.allowMediaFallback ? 'Habilitado' : 'Desabilitado')}</strong>
+                </div>
+              </div>
+
+              <div className="wake-modal-actions">
+                <button 
+                  className={`btn-wake-toggle ${wakeLockInfo.isActive ? 'btn-active' : ''}`}
+                  onClick={() => {
+                    wakeLockManager.toggle(true);
+                  }}
+                >
+                  <Zap size={16} />
+                  <span>{wakeLockInfo.isActive ? 'Desligar Trava de Tela' : 'Ativar Trava de Tela'}</span>
+                </button>
+
+                <button 
+                  className="btn-wake-toggle-media"
+                  onClick={() => {
+                    wakeLockManager.setAllowMediaFallback(!wakeLockInfo.allowMediaFallback);
+                  }}
+                >
+                  <span>{wakeLockInfo.allowMediaFallback ? 'Desativar Vídeo Auxiliar' : 'Permitir Vídeo Auxiliar'}</span>
+                </button>
+              </div>
+
+              {!wakeLockInfo.isSecureContext && (
+                <div className="wake-http-notice">
+                  <Info size={16} color="#f59e0b" />
+                  <p>
+                    <strong>Dica Técnica:</strong> Navegadores móveis exigem HTTPS para liberar a API oficial de Wake Lock fora de localhost. O servidor possui suporte a HTTPS local via <code>python main.py --https</code>.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

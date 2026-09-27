@@ -7,17 +7,9 @@ import { useRadarWarning } from '../utils/useRadarWarning';
 import { CLUSTER_SKINS } from './skins';
 
 export default function SpeedometerView({ data, onSendAction, isMinimal = false }) {
-  if (!data) return <div className="cluster-container"><p>Carregando telemetria...</p></div>;
-
-  const truck = data.truck || {};
-  const lights = data.lights || {};
-  const rpm = truck.rpm || 0;
-  const isEngineOn = rpm > 350;
-  const isHazardOn = lights.blinkerLeft && lights.blinkerRight;
-
   // 1. Alerta de Radar em tempo real no Modo Painel (com contagem regressiva em metros e voz)
   // Ativado se não for minimal (evita duplicar fala quando em tela dividida com GPS)
-  const approachingRadar = useRadarWarning(data.placement, !isMinimal);
+  const approachingRadar = useRadarWarning(data?.placement, !isMinimal);
 
   // 2. Seletor de Modelo / Skin do Painel (Persistente no localStorage)
   // REGRA: Na opção misto (isMinimal === true), força sempre o modelo padrão!
@@ -25,6 +17,14 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
     return localStorage.getItem('ets2_cluster_skin') || 'default';
   });
   const [isSkinModalOpen, setIsSkinModalOpen] = useState(false);
+
+  if (!data) return <div className="cluster-container"><p>Carregando telemetria...</p></div>;
+
+  const truck = data.truck || {};
+  const lights = data.lights || {};
+  const rpm = truck.rpm || 0;
+  const isEngineOn = rpm > 350;
+  const isHazardOn = lights.blinkerLeft && lights.blinkerRight;
 
   // Seleciona a skin ativa
   const activeSkinId = isMinimal ? 'default' : currentSkinId;

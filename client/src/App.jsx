@@ -5,7 +5,7 @@ import GpsView from './components/GpsView';
 import SplitView from './components/SplitView';
 import QrModal from './components/QrModal';
 import ErrorBoundary from './components/ErrorBoundary';
-import { requestScreenWakeLock } from './utils/wakeLock';
+import { wakeLockManager } from './utils/wakeLock';
 import './skins.css';
 
 export default function App() {
@@ -92,22 +92,15 @@ export default function App() {
     };
   }, []);
 
-  // Monitora estado de tela cheia e ativa trava de tela permanente
+  // Monitora estado de tela cheia e inicializa o gerenciador global de tela ativa
   useEffect(() => {
-    requestScreenWakeLock();
-    const handleFirstTouch = () => {
-      requestScreenWakeLock();
-    };
-    window.addEventListener('click', handleFirstTouch, { once: true });
-    window.addEventListener('touchstart', handleFirstTouch, { once: true });
+    wakeLockManager.requestWakeLock(false);
 
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
-      window.removeEventListener('click', handleFirstTouch);
-      window.removeEventListener('touchstart', handleFirstTouch);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);

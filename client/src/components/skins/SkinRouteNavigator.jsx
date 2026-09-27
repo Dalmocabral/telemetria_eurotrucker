@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 /**
  * Modelo 2: Route Navigator (Baseado fielmente na Foto 2)

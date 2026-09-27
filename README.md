@@ -116,15 +116,30 @@ O usuário pode escolher seu estilo preferido através do botão seletor flutuan
 
 ---
 
-### 3. 🗺️ GPS Vetorial 3D em Alta Definição (MapLibre GL)
-- Mapa vetorial 3D ultrarrápido renderizado em WebGL, sem travamentos.
-- Rota e trajetória traçadas com precisão sobre as rodovias do jogo.
-- Seta direcional estilizada que rotaciona suavemente conforme a bússola e orientação do caminhão.
-- Placa de limite de velocidade da rodovia e informações da carga (origem, destino e peso).
+### 3. 🗺️ GPS Vetorial 3D e Roteamento Rodoviário Real (MapLibre GL + A*)
+- **Rotas Reais pelas Rodovias do ETS2:** Substitui a linha reta direta por um roteador de alta velocidade com algoritmo A* executado diretamente sobre as estradas do jogo.
+- **Malha Viária Baseada no Jogo:** Utiliza a rede viária oficial extraída dos setores do ETS2 (`graph.bin` com 349.091 arestas e `geometry.bin` com 7,86 milhões de pontos de coordenadas, originários do ecossistema comunitário *TruckNav-Sim* e *ts-map*, sob licença GPL-3.0/MIT).
+- **Encaixe Inteligente (Map-Matching):** Encaixa o caminhão na rodovia mais próxima com limite seguro de distância (evita trajetos anômalos em balsas, trens ou áreas não mapeadas).
+- **Destino Preciso por Empresa ou Cidade:** Resolve automaticamente o pátio da empresa de entrega (`companies.geojson` com normalização de nomes/mods). Se a empresa não for identificada, utiliza o centro da cidade de destino com aviso explícito de `(Destino aproximado)`.
+- **Camadas GeoJSON Distintas:** A rota planejada é exibida em ciano brilhante com traçado de curvas de alta resolução, visualmente separada do rastro em âmbar do percurso já percorrido pelo caminhão.
+- **Instruções de Manobra Reais:** Gera avisos de curva e direção baseados nos ângulos reais das estradas e ramificações.
+- **Recálculo Inteligente com Throttling:** Atualiza a rota com limitação temporal e detecção de desvio de rota (>350m por 3 leituras consecutivas), sem consumir CPU nos 30 FPS do WebSocket.
 
 ---
 
-### 4. 🕹️ Controle Remoto do Caminhão (Botões de Ação na Tela)
+### 4. 📱 Tela Sempre Ativa Honesta (Wake Lock & Suporte HTTPS)
+- **Diagnóstico Transparente e Sem Falsos Positivos:** NUNCA exibe "Tela Ativa" sem confirmação real da API do navegador ou do player auxiliar.
+- **Estados Visíveis:**
+  - 🟢 **Tela Ativa (API Nativa):** W3C Screen Wake Lock concedido em contexto seguro.
+  - 🟣 **Tela Ativa (Vídeo Auxiliar):** Mantida acesa por reprodução de micro-vídeo mudo em segundo plano (ativado por toque do usuário).
+  - 🟡 **Inseguro (HTTP):** Alerta claro de que o navegador bloqueia a API nativa fora do `localhost` em conexões HTTP normais.
+  - 🔴 **Permissão Negada:** Informa recusa pelo sistema ou modo de economia extrema de bateria.
+  - ⚪ **Liberado pelo Sistema / Desativado pelo Usuário:** Gerenciamento com reaquisição automática no retorno de visibilidade da aba (`visibilitychange`).
+- **Suporte a HTTPS Local:** Inclui gerador de certificados TLS locais (`python server/generate_cert.py`) com nomes alternativos (SAN) para o IP local do PC, permitindo usar a Screen Wake Lock API nativa diretamente no tablet.
+
+---
+
+### 5. 🕹️ Controle Remoto do Caminhão (Botões de Ação na Tela)
 Comande o caminhão diretamente pelo tablet ou celular através de toques na tela com feedback tátil de vibração:
 - **Ligar/Desligar Motor** (Tecla `E`)
 - **Farol Baixo** (Tecla `L`)
@@ -136,7 +151,7 @@ Comande o caminhão diretamente pelo tablet ou celular através de toques na tel
 
 ---
 
-### 5. 🖥️ Painel Desktop Windows (CustomTkinter GUI)
+### 6. 🖥️ Painel Desktop Windows (CustomTkinter GUI)
 - **QR Code Automático:** Basta apontar a câmera do celular para abrir sem digitar nenhum IP.
 - **Botão "Liberar no Firewall":** Adiciona as regras necessárias no Windows Defender Firewall em 1 clique.
 - **Auto-Kill de Processos Zumbis:** Elimina conflitos de porta (`Errno 10048`), liberando a porta 8000 automaticamente.
@@ -169,8 +184,16 @@ A janela gráfica moderna do **TruckPilot Pro** será aberta com o **QR Code**.
 2. Aponte a câmera do aparelho para o QR Code da tela do computador (ou digite o endereço exibido, ex: `http://192.168.1.12:8000`).
 3. Toque em **[ Tela Cheia ]** no navegador e escolha a visão desejada:
    - **Painel:** Escolha entre os 10 modelos visuais disponíveis.
-   - **GPS:** Mapa 3D vetorial em tempo real com alertas de radares.
+   - **GPS:** Mapa 3D vetorial em tempo real com rota calculada pelas estradas e alertas de radares.
    - **Misto:** Painel e mapa divididos lado a lado na mesma tela.
+
+### 4. (Opcional) Ativar HTTPS para Wake Lock Nativo no Tablet
+Para habilitar a Screen Wake Lock API nativa em dispositivos móveis na rede local:
+```bash
+python server/generate_cert.py
+python server/main.py --ssl
+```
+Acesse `https://IP-DO-SEU-PC:8443` no tablet e aceite o certificado local autoassinado.
 
 ---
 
@@ -231,9 +254,14 @@ telemetria_eurotrucker/
 │   │   └── skins.css            # Estilos refinados de todos os 10 modelos
 ├── server/                      # Servidor Backend em Python
 │   ├── ets2_reader.py           # Leitura da Memória Compartilhada do ETS2
+│   ├── router.py                # Roteador A*, malha viária e resolução de empresas
+│   ├── generate_cert.py         # Gerador de certificados TLS locais (SAN)
 │   ├── key_sender.py            # Simulação de teclas no Windows (ctypes)
 │   ├── main.py                  # API FastAPI, WebSockets e servidor de estáticos
 │   └── gui.py                   # Interface Gráfica Desktop (CustomTkinter)
+├── tests/                       # Suíte de Testes Automatizados
+│   ├── test_router.py           # Testes unitários do A*, snapping e telemetria
+│   └── test_wake_lock.js        # Testes unitários do gerenciador de Wake Lock
 ├── build_exe.py                 # Script de empacotamento com PyInstaller
 ├── iniciar_servidor.bat         # Inicializador rápido de 1 clique
 ├── iniciar_desenvolvimento.bat  # Ambiente integrado de desenvolvimento
@@ -243,7 +271,54 @@ telemetria_eurotrucker/
 
 ---
 
+## 🧪 Testes Automatizados
+
+O projeto inclui uma suíte completa de testes para garantir a robustez do roteamento e do gerenciamento de energia:
+
+### 1. Testes do Roteador Rodoviário (Python):
+```bash
+python -m unittest tests/test_router.py
+```
+- Validação de conversão bidirecional de coordenadas (ETS2 <-> WGS84 Mercator).
+- Carregamento de nós, arestas e geometria contínua de curvas (`geometry.bin`).
+- Execução do A* em grafo sintético e na malha viária real de Paris a Lille.
+- Encaixe espacial (map-matching) do caminhão e empresas com limites de distância.
+- Fallback seguro para centro da cidade explicitamente marcado como `(Destino aproximado)`.
+- Tratamento de nós desconectados e telemetria simulada ponta-a-ponta.
+
+### 2. Testes da Tela Sempre Ativa (Node.js):
+```bash
+node --test tests/test_wake_lock.js
+```
+- Aquisição da W3C Screen Wake Lock API nativa em contexto seguro.
+- Diagnóstico honesto de conexões HTTP locais (`UNAVAILABLE_HTTP`).
+- Fallback auxiliar de micro-vídeo com consentimento do usuário (`ACTIVE_MEDIA`).
+- Liberação pelo sistema operacional (`RELEASED`) e reaquisição no foco (`visibilitychange`).
+- Desativação pelo usuário e bloqueio de reativação indevida (`DISABLED`).
+
+### 3. Lint e Build do Frontend:
+```bash
+cd client
+npm run lint
+npm run build
+```
+
+---
+
+## ⚠️ Limitações Conhecidas
+
+1. **Mapas Modificados (ProMods, EAA, Rotas Brasil, etc.):**
+   - A malha viária oficial binária incluída no projeto abrange o mapa base oficial da SCS Software e DLCs europeias principais.
+   - Em estradas exclusivas de mapas modificados não catalogados, o roteador detectará que o caminhão ou destino está fora da rede mapeada (`START_OFF_ROAD` ou `DEST_NOT_SNAPPED`) e exibirá um aviso transparente no painel em vez de inventar rotas fictícias.
+
+2. **Políticas de Wake Lock em HTTP Local:**
+   - Em conexões `http://IP:8000`, navegadores baseados em Chromium e WebKit bloqueiam a Screen Wake Lock API nativa por exigência do W3C de Contexto Seguro (HTTPS).
+   - O TruckPilot Pro fornece diagnóstico honesto dessa restrição e disponibiliza como alternativa opcional o micro-vídeo auxiliar acionado por toque ou a inicialização segura com certificados TLS locais (`python server/generate_cert.py` e `python server/main.py --ssl`).
+
+---
+
 ## 📜 Licença e Créditos
 - Desenvolvido para a comunidade de simuladores de caminhão (**Euro Truck Simulator 2 / SCS Software**).
 - Dados de telemetria fornecidos pelo plugin comunitário `scs-telemetry`.
-- Cartografia vetorial e geodados baseados nas coordenadas nativas do mapa do ETS2.
+- Cartografia vetorial e malha viária derivadas dos projetos de código aberto comunitários `TruckNav-Sim` (Rares-Muntean) e `ts-map` (dariowouters), sob licenças GNU GPL v3.0 e MIT.
+

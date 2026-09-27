@@ -10,12 +10,15 @@ export function useRadarWarning(placement, voiceEnabled = true) {
   const lastRadarAlertIdRef = useRef('');
   const lastRadarAlertTimeRef = useRef(0);
 
+  const posX = placement?.x;
+  const posZ = placement?.z;
+
   useEffect(() => {
-    if (!placement || (!placement.x && !placement.z)) {
+    if (!posX && !posZ) {
       setApproachingRadar(null);
       return;
     }
-    if (placement.x === 0 && placement.z === 0) {
+    if (posX === 0 && posZ === 0) {
       setApproachingRadar(null);
       return;
     }
@@ -24,8 +27,8 @@ export function useRadarWarning(placement, voiceEnabled = true) {
     let minDistance = Infinity;
 
     for (const cam of ETS2_SPEED_CAMERAS) {
-      const dx = cam.x - placement.x;
-      const dz = cam.z - placement.z;
+      const dx = cam.x - posX;
+      const dz = cam.z - posZ;
       const distMeters = Math.hypot(dx, dz);
 
       if (distMeters < minDistance) {
@@ -61,7 +64,7 @@ export function useRadarWarning(placement, voiceEnabled = true) {
     } else {
       setApproachingRadar(null);
     }
-  }, [placement?.x, placement?.z, voiceEnabled]);
+  }, [posX, posZ, voiceEnabled]);
 
   return approachingRadar;
 }

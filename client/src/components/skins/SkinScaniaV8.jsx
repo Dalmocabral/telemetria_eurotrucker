@@ -9,7 +9,6 @@ import React from 'react';
 export default function SkinScaniaV8({ data }) {
   const truck = data?.truck || {};
   const lights = data?.lights || {};
-  const game = data?.game || {};
 
   const speed = Math.round(truck.speed || 0);
   const speedLimit = truck.speedLimit || 80;
