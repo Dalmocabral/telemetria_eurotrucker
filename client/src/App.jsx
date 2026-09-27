@@ -8,6 +8,31 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { wakeLockManager } from './utils/wakeLock';
 import './skins.css';
 
+const DEFAULT_TELEMETRY = {
+  connected: false,
+  simulated: false,
+  game: { paused: true, time: '--:--' },
+  truck: {
+    speed: 0,
+    speedLimit: 80,
+    rpm: 0,
+    maxRpm: 2500,
+    gear: 0,
+    displayedGear: 'N',
+    suggestedGear: 1,
+    fuel: 0,
+    fuelCapacity: 1200,
+    waterTemperature: 0,
+    batteryVoltage: 24,
+    brakeAirPressure: 8,
+    parkBrake: true,
+  },
+  lights: {},
+  job: { onJob: false, cargo: 'Aguardando ETS2...' },
+  navigation: { distance: 0, time: '--:--' },
+  placement: { x: -21700.68, y: 0, z: -5700.77, heading: 0 },
+};
+
 export default function App() {
   // Suporte a definir modo pela URL (ex: ?view=gps ou ?view=cluster) ou persistência local
   const getInitialView = () => {
@@ -20,7 +45,7 @@ export default function App() {
   };
 
   const [viewMode, setViewModeState] = useState(getInitialView);
-  const [telemetry, setTelemetry] = useState(null);
+  const [telemetry, setTelemetry] = useState(DEFAULT_TELEMETRY);
   const [connectionStatus, setConnectionStatus] = useState('offline'); // 'connected' | 'simulated' | 'offline'
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
