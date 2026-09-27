@@ -9,7 +9,8 @@ import {
   CornerDownRight, CornerDownLeft, RotateCcw, Route,
   Volume2, VolumeX, ShieldAlert,
   Flag, Fuel, Moon, Clock, ChevronLeft,
-  Camera, Zap, Layers, Info, X, RefreshCw
+  Camera, Zap, Layers, Info, X, RefreshCw,
+  Users, User
 } from 'lucide-react';
 import { wakeLockManager } from '../utils/wakeLock';
 import { convertEts2ToGeo } from '../utils/ets2Geo';
@@ -76,11 +77,17 @@ export default function GpsView({ data }) {
   const lastRadarAlertIdRef = useRef('');
   const lastRadarAlertTimeRef = useRef(0);
 
+  const [showMultiplayer, setShowMultiplayer] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+
   const truck = data?.truck || {};
   const placement = data?.placement || { x: -28842.0, z: 4982.0, heading: 0 };
   const nav = data?.navigation || {};
   const game = data?.game || {};
   const job = data?.job || {};
+  const multiplayer = data?.multiplayer || {};
+  const mpPlayers = multiplayer.players || [];
+  const mpCount = multiplayer.player_count !== undefined ? multiplayer.player_count : mpPlayers.length;
 
   const speed = truck.speed || 0;
   const speedLimit = truck.speedLimit || 80;
@@ -489,6 +496,115 @@ export default function GpsView({ data }) {
             },
           });
 
+          // 6. Jogadores do TruckersMP (Multiplayer)
+          try {
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = 36;
+            tmpCanvas.height = 36;
+            const ctx = tmpCanvas.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, 36, 36);
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+              ctx.shadowBlur = 6;
+              ctx.shadowOffsetY = 2;
+
+              ctx.fillStyle = '#10b981';
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 2.4;
+              ctx.beginPath();
+              ctx.moveTo(18, 4);
+              ctx.lineTo(31, 31);
+              ctx.lineTo(18, 24);
+              ctx.lineTo(5, 31);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+
+              const imgData = ctx.getImageData(0, 0, 36, 36);
+              if (!map.hasImage('tmp-truck-arrow')) {
+                map.addImage('tmp-truck-arrow', imgData);
+              }
+            }
+          } catch (e) {
+            console.warn('[MapLibre TMP Image]', e);
+          }
+
+          map.addSource('multiplayer-players-source', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          // Glow pulsante ao redor do caminhão do outro jogador
+          map.addLayer({
+            id: 'multiplayer-players-glow',
+            type: 'circle',
+            source: 'multiplayer-players-source',
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 8, 10, 16, 14, 22],
+              'circle-color': '#10b981',
+              'circle-opacity': 0.28,
+              'circle-stroke-color': '#34d399',
+              'circle-stroke-width': 1.2,
+            },
+          });
+
+          // Seta direcional orientada pelo heading do veículo
+          map.addLayer({
+            id: 'multiplayer-players-arrow',
+            type: 'symbol',
+            source: 'multiplayer-players-source',
+            layout: {
+              'icon-image': 'tmp-truck-arrow',
+              'icon-rotate': ['get', 'heading'],
+              'icon-rotation-alignment': 'map',
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-size': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 10, 0.95, 14, 1.2],
+            },
+          });
+
+          // Rótulo com Nickname e Tag VTC do jogador
+          map.addLayer({
+            id: 'multiplayer-players-label',
+            type: 'symbol',
+            source: 'multiplayer-players-source',
+            minzoom: 6.5,
+            layout: {
+              'text-field': ['get', 'label'],
+              'text-font': ['Commissioner'],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 6.5, 10, 9, 12, 12, 14],
+              'text-anchor': 'bottom',
+              'text-offset': [0, -1.3],
+              'text-allow-overlap': false,
+            },
+            paint: {
+              'text-color': '#6ee7b7',
+              'text-halo-color': '#020617',
+              'text-halo-width': 2.5,
+            },
+          });
+
+          const handlePlayerSelect = (e) => {
+            if (e.features && e.features[0]) {
+              const feat = e.features[0];
+              const p = feat.properties || {};
+              setSelectedPlayer({
+                id: p.id,
+                name: p.name,
+                tag: p.tag,
+                speed: p.speed,
+                distance: p.distance,
+                heading: p.heading,
+                coordinates: feat.geometry.coordinates,
+              });
+            }
+          };
+
+          map.on('click', 'multiplayer-players-arrow', handlePlayerSelect);
+          map.on('click', 'multiplayer-players-glow', handlePlayerSelect);
+          map.on('mouseenter', 'multiplayer-players-arrow', () => { map.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', 'multiplayer-players-arrow', () => { map.getCanvas().style.cursor = ''; });
+
           setMapLoaded(true);
         });
 
@@ -588,6 +704,42 @@ export default function GpsView({ data }) {
       }
     }
   }, [destinationInfo, mapLoaded]);
+
+  // 8. Atualização Reativa dos Jogadores do TruckersMP no Mapa
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const source = mapInstanceRef.current.getSource('multiplayer-players-source');
+    if (!source) return;
+
+    if (!showMultiplayer || !mpPlayers || mpPlayers.length === 0) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
+    const features = mpPlayers.map(p => {
+      const coords = convertEts2ToGeo(p.x, p.z);
+      const label = p.tag ? `[${p.tag}] ${p.name}` : p.name;
+      return {
+        type: 'Feature',
+        id: p.id,
+        properties: {
+          id: p.id,
+          name: p.name,
+          tag: p.tag || '',
+          heading: p.heading || 0,
+          speed: p.speed || 0,
+          distance: p.distance || 0,
+          label,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: coords,
+        },
+      };
+    });
+
+    source.setData({ type: 'FeatureCollection', features });
+  }, [mpPlayers, showMultiplayer, mapLoaded]);
 
   // 8. Atualização de Alvos da Telemetria e Rastro Percorrido
   useEffect(() => {
@@ -851,7 +1003,47 @@ export default function GpsView({ data }) {
         )}
       </div>
 
-      {/* 4. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
+      {/* 4. CARD FLUTUANTE DE JOGADOR TRUCKERSMP SELECIONADO */}
+      {selectedPlayer && showMultiplayer && (
+        <div className="tmp-player-card">
+          <div className="tmp-player-header">
+            <div className="tmp-player-title">
+              <Users size={18} color="#10b981" />
+              {selectedPlayer.tag && (
+                <span className="tmp-player-tag">{selectedPlayer.tag}</span>
+              )}
+              <span className="tmp-player-name">{selectedPlayer.name}</span>
+            </div>
+            <button 
+              className="tmp-player-close" 
+              onClick={() => setSelectedPlayer(null)}
+              title="Fechar detalhes"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="tmp-player-stats-grid">
+            <div className="tmp-stat-item">
+              <span className="tmp-stat-label">Distância</span>
+              <span className="tmp-stat-val">{Math.round(selectedPlayer.distance || 0)} m</span>
+            </div>
+            <div className="tmp-stat-item">
+              <span className="tmp-stat-label">Velocidade</span>
+              <span className="tmp-stat-val">{Math.round(selectedPlayer.speed || 0)} km/h</span>
+            </div>
+            <div className="tmp-stat-item">
+              <span className="tmp-stat-label">ID TruckersMP</span>
+              <span className="tmp-stat-val">#{selectedPlayer.id}</span>
+            </div>
+            <div className="tmp-stat-item">
+              <span className="tmp-stat-label">Orientação</span>
+              <span className="tmp-stat-val">{Math.round(selectedPlayer.heading || 0)}°</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
       {approachingRadar && (
         <div className="radar-ahead-warning-card blink-alert">
           <div className="radar-camera-badge">
@@ -926,6 +1118,25 @@ export default function GpsView({ data }) {
           title="Ver Rota Completa até o Destino"
         >
           <Route size={22} color="#facc15" />
+        </button>
+
+        {/* Alternar Visualização de Jogadores do TruckersMP */}
+        <button 
+          id="btn-gps-multiplayer"
+          className={`gps-pill-btn ${showMultiplayer ? 'active-green' : ''}`}
+          onClick={() => {
+            const next = !showMultiplayer;
+            setShowMultiplayer(next);
+            if (!next) setSelectedPlayer(null);
+            speakVoice(next ? 'Jogadores do TruckersMP visíveis no mapa.' : 'Jogadores do TruckersMP ocultados.');
+          }}
+          title={showMultiplayer ? `TruckersMP: ${mpCount} jogadores por perto (Clique para ocultar)` : "Mostrar jogadores do TruckersMP"}
+          style={{ position: 'relative' }}
+        >
+          <Users size={22} color={showMultiplayer ? '#10b981' : '#94a3b8'} />
+          {showMultiplayer && mpCount > 0 && (
+            <span className="gps-btn-badge">{mpCount}</span>
+          )}
         </button>
 
         {/* Alternar Modo 3D vs 2D */}

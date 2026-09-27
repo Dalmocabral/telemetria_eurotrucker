@@ -16,6 +16,8 @@ from typing import Dict, Any, Optional
 
 import truck_telemetry.telemetry_version.v1_10 as v1_10
 import truck_telemetry.telemetry_version.v1_12 as v1_12
+from truckersmp_bridge import truckersmp_bridge_instance
+
 
 # Lista ordenada de mapeamentos de memória compartilhada para testar
 SHARED_MEMORY_NAMES = [
@@ -277,7 +279,10 @@ class ETS2Reader:
                 "y": coord_y,
                 "z": coord_z,
                 "heading": heading_deg,
-            }
+            },
+            "multiplayer": truckersmp_bridge_instance.get_telemetry_payload(
+                coord_x, coord_z, heading_deg, enable_simulation=True
+            ),
         }
 
     def _generate_simulated_data(self) -> Dict[str, Any]:
@@ -416,5 +421,8 @@ class ETS2Reader:
                 "y": 0.0,
                 "z": round(self._sim_z, 2),
                 "heading": round(heading_deg, 1),
-            }
+            },
+            "multiplayer": truckersmp_bridge_instance.get_telemetry_payload(
+                self._sim_x, self._sim_z, heading_deg, enable_simulation=True
+            ),
         }

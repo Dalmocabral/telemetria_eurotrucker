@@ -16,8 +16,10 @@ import psutil
 
 from ets2_reader import ETS2Reader
 from router import router_instance
+from truckersmp_bridge import truckersmp_bridge_instance
 
 reader = ETS2Reader()
+
 connected_clients: Set[WebSocket] = set()
 
 def get_local_ip() -> str:
@@ -153,6 +155,24 @@ def post_action(action_name: str):
     """Permite disparar ações (teclas) no ETS2 via requisição HTTP rápida."""
     success = trigger_action(action_name)
     return {"action": action_name, "success": success}
+
+@app.get("/api/truckersmp/players")
+def get_truckersmp_players():
+    """Retorna a lista de jogadores próximos no TruckersMP (Plugin SDK, REST ou Simulação)."""
+    data = reader.get_data()
+    placement = data.get("placement", {})
+    px = placement.get("x", -28842.0)
+    pz = placement.get("z", 4982.0)
+    heading = placement.get("heading", 0.0)
+    return truckersmp_bridge_instance.get_telemetry_payload(px, pz, heading, enable_simulation=True)
+
+@app.post("/api/truckersmp/feed")
+async def post_truckersmp_feed(payload: Dict[str, Any]):
+    """Recebe telemetria de jogadores do TruckersMP injetada por plugins externos ou bridge REST."""
+    players = payload.get("players", [])
+    truckersmp_bridge_instance.set_manual_feed(players)
+    return {"status": "ok", "received_players": len(players)}
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

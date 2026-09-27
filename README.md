@@ -127,7 +127,23 @@ O usuário pode escolher seu estilo preferido através do botão seletor flutuan
 
 ---
 
-### 4. 📱 Tela Sempre Ativa Honesta (Wake Lock & Suporte HTTPS)
+### 4. 🌐 Marcadores de Jogadores do TruckersMP (Multiplayer)
+- **Visualização de Jogadores em Tempo Real:** Exibe os caminhões de outros jogadores que estão trafegando próximos a você diretamente no mapa vetorial 3D.
+- **Orientação e Rótulo Completo:** Cada marcador mostra uma seta verde esmeralda com a rotação exata da cabine do outro jogador, acompanhada do seu rótulo no formato `[Tag VTC] Nickname`.
+- **Card Interativo ao Tocar no Jogador:** Ao tocar no caminhão de outro jogador no tablet, abre-se um card com detalhes:
+  - Nome de exibição e Tag da empresa virtual (VTC)
+  - ID da entidade no TruckersMP (`#ID`)
+  - Distância em metros do seu caminhão
+  - Velocidade atual do jogador em km/h
+  - Orientação da bússola em graus
+- **Controle de Visualização no GPS:** Botão dedicado na coluna direita do mapa com contador em tempo real de jogadores próximos. Permite ocultar ou exibir os jogadores com aviso sonoro por voz.
+- **Ponte Nativa C++ (TruckersMP Client SDK):** Código-fonte C++17 completo disponível em `plugins/truckersmp/` que compila a DLL `truckpilot_tmp.dll` e transmite os dados para a Memória Compartilhada do Windows (`Local\TruckersMPTelemetry`) com latência zero.
+- **Modo Demonstração Integrado:** Permite testar a interface imediatamente mesmo sem o jogo ou o TruckersMP abertos, gerando tráfego virtual de teste nas vias adjacentes.
+
+---
+
+### 5. 📱 Tela Sempre Ativa Honesta (Wake Lock & Suporte HTTPS)
+
 - **Diagnóstico Transparente e Sem Falsos Positivos:** NUNCA exibe "Tela Ativa" sem confirmação real da API do navegador ou do player auxiliar.
 - **Estados Visíveis:**
   - 🟢 **Tela Ativa (API Nativa):** W3C Screen Wake Lock concedido em contexto seguro.
