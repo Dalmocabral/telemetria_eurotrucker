@@ -19,19 +19,29 @@ export function useRoadRoute(placement, job, enabled = true) {
   const isCalculatingRef = useRef(false);
   const offRouteCountRef = useRef(0);
 
-  const cityDst = job?.cityDestination;
-  const cityDstId = job?.cityDestinationId || '';
-  const compDst = job?.companyDestination;
-  const compDstId = job?.companyDestinationId || '';
+  // Lógica inteligente de estágio do frete:
+  // Se está em frete (onJob) e a carga NÃO está carregada (ou sem reboque engatado), rota vai para a fábrica de COLETA.
+  // Assim que a carga for engatada/carregada, a rota muda para a entrega final.
+  const isOnJob = !!job?.onJob;
+  const isCargoLoaded = !!job?.isCargoLoaded;
+  const hasSource = Boolean(job?.citySource || job?.citySourceId || job?.companySource || job?.companySourceId);
+  const isGoingToPickup = isOnJob && !isCargoLoaded && hasSource;
+
+  const targetCity = isGoingToPickup ? (job?.citySource || job?.citySourceId) : (job?.cityDestination || job?.cityDestinationId || job?.cityDst);
+  const targetCityId = isGoingToPickup ? (job?.citySourceId || '') : (job?.cityDestinationId || job?.cityDstId || '');
+  const targetCompany = isGoingToPickup ? (job?.companySource || job?.companySourceId) : (job?.companyDestination || job?.companyDestinationId || job?.compDst);
+  const targetCompanyId = isGoingToPickup ? (job?.companySourceId || '') : (job?.companyDestinationId || job?.compDstId || '');
+
   const truckX = placement?.x || 0;
   const truckZ = placement?.z || 0;
 
-  const currentDestKey = `${cityDstId || cityDst || ''}::${compDstId || compDst || ''}`;
+  const stageTag = isGoingToPickup ? 'PICKUP' : 'DELIVERY';
+  const currentDestKey = `${stageTag}::${targetCityId || targetCity || ''}::${targetCompanyId || targetCompany || ''}`;
 
   const fetchRoute = useCallback(async (force = false) => {
     if (!enabled) return;
     if (!truckX && !truckZ) return;
-    if (!cityDst && !cityDstId) {
+    if (!targetCity && !targetCityId) {
       setRouteGeoJson(null);
       setRouteStats(null);
       setDestinationInfo(null);
@@ -64,10 +74,10 @@ export function useRoadRoute(placement, job, enabled = true) {
       const queryParams = new URLSearchParams({
         start_x: truckX.toString(),
         start_z: truckZ.toString(),
-        city_dst_id: cityDstId || '',
-        city_dst: cityDst || '',
-        comp_dst_id: compDstId || '',
-        comp_dst: compDst || '',
+        city_dst_id: targetCityId || '',
+        city_dst: targetCity || '',
+        comp_dst_id: targetCompanyId || '',
+        comp_dst: targetCompany || '',
       });
 
       const res = await fetch(`${protocol}//${host}:${port}/api/route?${queryParams.toString()}`);
@@ -83,7 +93,12 @@ export function useRoadRoute(placement, job, enabled = true) {
           distance_km: data.distance_km,
           point_count: data.point_count,
         });
-        setDestinationInfo(data.destination);
+        const enrichedDest = {
+          ...data.destination,
+          isPickup: isGoingToPickup,
+          taskTitle: isGoingToPickup ? 'Coleta da Carga' : 'Destino da Entrega',
+        };
+        setDestinationInfo(enrichedDest);
         setManeuvers(data.maneuvers || []);
         setRouteStatus('active');
         setRouteError(null);
@@ -96,7 +111,11 @@ export function useRoadRoute(placement, job, enabled = true) {
         setRouteStatus('error');
         setRouteError(data.message || 'Não foi possível traçar uma rota por rodovias.');
         if (data.destination) {
-          setDestinationInfo(data.destination);
+          setDestinationInfo({
+            ...data.destination,
+            isPickup: isGoingToPickup,
+            taskTitle: isGoingToPickup ? 'Coleta da Carga' : 'Destino da Entrega',
+          });
         }
       }
     } catch (err) {
@@ -106,12 +125,12 @@ export function useRoadRoute(placement, job, enabled = true) {
     } finally {
       isCalculatingRef.current = false;
     }
-  }, [enabled, truckX, truckZ, cityDst, cityDstId, compDst, compDstId, currentDestKey]);
+  }, [enabled, truckX, truckZ, targetCity, targetCityId, targetCompany, targetCompanyId, isGoingToPickup, currentDestKey]);
 
   // 1. Detecta mudança de destino
   useEffect(() => {
     if (!enabled) return;
-    if (!cityDst && !cityDstId) {
+    if (!targetCity && !targetCityId) {
       setRouteGeoJson(null);
       setDestinationInfo(null);
       setRouteStatus('idle');
@@ -121,7 +140,7 @@ export function useRoadRoute(placement, job, enabled = true) {
     if (currentDestKey !== lastRoutedDestKeyRef.current) {
       fetchRoute(true);
     }
-  }, [enabled, currentDestKey, cityDst, cityDstId, fetchRoute]);
+  }, [enabled, currentDestKey, targetCity, targetCityId, fetchRoute]);
 
   // 2. Verificação periódica de desvio acentuado da rota (off-route detection)
   useEffect(() => {

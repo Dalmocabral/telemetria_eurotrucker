@@ -48,11 +48,23 @@ def trigger_action(action_name: str) -> bool:
                 pydirectinput.keyDown('c')
                 time.sleep(0.08)
                 pydirectinput.keyUp('c')
-            elif action == "wipers":
+            elif action == "wipers" or action == "wipers_cycle":
                 # Limpadores de Para-brisa (Tecla P)
                 pydirectinput.keyDown('p')
                 time.sleep(0.08)
                 pydirectinput.keyUp('p')
+            elif action == "autopilot" or action == "toggle_autopilot":
+                from autopilot import autopilot_manager
+                autopilot_manager.toggle()
+            elif action == "cycle_lights":
+                # Alternar faróis sequencialmente
+                pydirectinput.keyDown('l')
+                time.sleep(0.08)
+                pydirectinput.keyUp('l')
+            elif action == "light_high_toggle":
+                pydirectinput.keyDown('k')
+                time.sleep(0.08)
+                pydirectinput.keyUp('k')
             else:
                 print(f"[KeySender] Ação desconhecida: {action}")
                 return

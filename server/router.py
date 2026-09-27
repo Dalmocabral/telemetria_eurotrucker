@@ -544,28 +544,43 @@ class RoadRouter:
 
             if abs(diff_deg) >= 28.0:
                 m_type = "slight-right"
+                turn_text = "Mantenha à direita"
                 if diff_deg > 65.0:
-                    m_type = "sharp-right" if diff_deg > 105.0 else "right"
+                    if diff_deg > 100.0:
+                        m_type = "sharp-right"
+                        turn_text = "Curva acentuada à direita"
+                    else:
+                        m_type = "right"
+                        turn_text = "Vire à direita"
                 elif diff_deg < -65.0:
-                    m_type = "sharp-left" if diff_deg < -105.0 else "left"
+                    if diff_deg < -100.0:
+                        m_type = "sharp-left"
+                        turn_text = "Curva acentuada à esquerda"
+                    else:
+                        m_type = "left"
+                        turn_text = "Vire à esquerda"
                 elif diff_deg < -28.0:
                     m_type = "slight-left"
-
-                instr = f"Em {int(cum_dist)}m: "
-                if "right" in m_type:
-                    instr += "Curva à direita" if m_type == "right" else ("Curva acentuada à direita" if m_type == "sharp-right" else "Mantenha à direita")
-                else:
-                    instr += "Curva à esquerda" if m_type == "left" else ("Curva acentuada à esquerda" if m_type == "sharp-left" else "Mantenha à esquerda")
+                    turn_text = "Mantenha à esquerda"
 
                 maneuvers.append({
                     "type": m_type,
                     "distance": int(cum_dist),
-                    "instruction": instr,
+                    "instruction": turn_text,
+                    "turn_text": turn_text,
                     "point": p2,
+                    "coord_index": min(len(coords) - 1, i + step),
                 })
 
-        if not maneuvers:
-            maneuvers.append({"type": "straight", "distance": 0, "instruction": "Siga em frente pela rodovia"})
+        # Adiciona o destino final como a última manobra da jornada
+        maneuvers.append({
+            "type": "destination",
+            "distance": int(cum_dist),
+            "instruction": "Destino final à frente",
+            "turn_text": "Seu destino final",
+            "point": coords[-1],
+            "coord_index": len(coords) - 1,
+        })
 
         return maneuvers
 

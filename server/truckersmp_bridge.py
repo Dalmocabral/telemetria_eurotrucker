@@ -224,10 +224,11 @@ class TruckersMPBridge:
         truck_x: float,
         truck_z: float,
         truck_heading: float,
-        enable_simulation: bool = True
+        enable_simulation: bool = False
     ) -> Dict[str, Any]:
         """
         Retorna o dicionário de multiplayer formatado para ser inserido na telemetria WebSocket.
+        Sem dados falsos ou simulados: apenas retorna jogadores se o plugin C++ real estiver ativo.
         """
         # 1. Tenta dados reais via C++ Client SDK (Shared Memory)
         real_data = self.try_read_shared_memory()
@@ -242,17 +243,6 @@ class TruckersMPBridge:
                 "local_player_id": 0,
                 "player_count": len(self.manual_feed),
                 "players": self.manual_feed,
-            }
-
-        # 3. Fallback inteligente de simulação
-        if enable_simulation and (truck_x != 0.0 or truck_z != 0.0):
-            sim_players = self.get_simulated_players(truck_x, truck_z, truck_heading)
-            return {
-                "source": "simulated",
-                "connected": True,
-                "local_player_id": 9999,
-                "player_count": len(sim_players),
-                "players": sim_players,
             }
 
         return {

@@ -267,6 +267,8 @@ class ETS2Reader:
                 "income": int(d.get("jobIncome", 0) or 0),
                 "deadline": "Em andamento",
                 "onJob": bool(d.get("onJob", False)),
+                "isCargoLoaded": bool(d.get("isCargoLoaded", False) or (isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False))),
+                "trailerAttached": bool(isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False)),
             },
             "navigation": {
                 "distance": route_dist_km,
@@ -410,6 +412,8 @@ class ETS2Reader:
                 "income": 14200,
                 "deadline": "Restam 4h 15min",
                 "onJob": True,
+                "isCargoLoaded": True,
+                "trailerAttached": True,
             },
             "navigation": {
                 "distance": max(10, int(430 - (t * 0.02))),
@@ -423,6 +427,6 @@ class ETS2Reader:
                 "heading": round(heading_deg, 1),
             },
             "multiplayer": truckersmp_bridge_instance.get_telemetry_payload(
-                self._sim_x, self._sim_z, heading_deg, enable_simulation=True
+                self._sim_x, self._sim_z, heading_deg, enable_simulation=False
             ),
         }

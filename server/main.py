@@ -148,6 +148,7 @@ def get_qr_code(port: int = PORT):
 
 import json
 from key_sender import trigger_action
+from autopilot import autopilot_manager
 
 @app.post("/api/action/{action_name}")
 @app.get("/api/action/{action_name}")
@@ -156,15 +157,26 @@ def post_action(action_name: str):
     success = trigger_action(action_name)
     return {"action": action_name, "success": success}
 
+@app.post("/api/autopilot/toggle")
+@app.get("/api/autopilot/toggle")
+def toggle_autopilot():
+    """Ativa ou desativa o Piloto Automático Inteligente sincronizado com placas."""
+    status = autopilot_manager.toggle()
+    return {"autopilot": status}
+
+@app.get("/api/autopilot/status")
+def get_autopilot_status():
+    return {"autopilot": autopilot_manager.is_enabled}
+
 @app.get("/api/truckersmp/players")
 def get_truckersmp_players():
-    """Retorna a lista de jogadores próximos no TruckersMP (Plugin SDK, REST ou Simulação)."""
+    """Retorna a lista de jogadores reais no TruckersMP (Shared Memory)."""
     data = reader.get_data()
     placement = data.get("placement", {})
     px = placement.get("x", -28842.0)
     pz = placement.get("z", 4982.0)
     heading = placement.get("heading", 0.0)
-    return truckersmp_bridge_instance.get_telemetry_payload(px, pz, heading, enable_simulation=True)
+    return truckersmp_bridge_instance.get_telemetry_payload(px, pz, heading, enable_simulation=False)
 
 @app.post("/api/truckersmp/feed")
 async def post_truckersmp_feed(payload: Dict[str, Any]):
@@ -196,9 +208,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
 async def telemetry_broadcast_loop():
     """Loop contínuo de broadcast assíncrono (~30 fps / 33ms por tick)."""
+    autopilot_manager.init_with_reader(reader)
     while True:
         if connected_clients:
             telemetry_data = reader.get_data()
+            telemetry_data["autopilot"] = autopilot_manager.is_enabled
             dead_clients = set()
             for ws in list(connected_clients):
                 try:

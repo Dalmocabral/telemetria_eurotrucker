@@ -9,8 +9,7 @@ import {
   CornerDownRight, CornerDownLeft, RotateCcw, Route,
   Volume2, VolumeX, ShieldAlert,
   Flag, Fuel, Moon, Clock, ChevronLeft,
-  Camera, Zap, Layers, Info, X, RefreshCw,
-  Users, User
+  Camera, Zap, Layers, Info, X, RefreshCw
 } from 'lucide-react';
 import { wakeLockManager } from '../utils/wakeLock';
 import { convertEts2ToGeo } from '../utils/ets2Geo';
@@ -32,8 +31,8 @@ function getPmtilesProtocol() {
   return pmtilesProtocol;
 }
 
-function renderManeuverIcon(iconName, color = '#00e5ff') {
-  const props = { size: 30, color };
+function renderManeuverIcon(iconName, color = '#ffffff') {
+  const props = { size: 36, color: '#ffffff', strokeWidth: 2.6 };
   switch (iconName) {
     case 'ArrowUp': return <ArrowUp {...props} />;
     case 'ArrowUpRight': return <ArrowUpRight {...props} />;
@@ -76,18 +75,13 @@ export default function GpsView({ data }) {
   const animFrameIdRef = useRef(null);
   const lastRadarAlertIdRef = useRef('');
   const lastRadarAlertTimeRef = useRef(0);
-
-  const [showMultiplayer, setShowMultiplayer] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const lastSpokenManeuverStageRef = useRef('');
 
   const truck = data?.truck || {};
   const placement = data?.placement || { x: -28842.0, z: 4982.0, heading: 0 };
   const nav = data?.navigation || {};
   const game = data?.game || {};
   const job = data?.job || {};
-  const multiplayer = data?.multiplayer || {};
-  const mpPlayers = multiplayer.players || [];
-  const mpCount = multiplayer.player_count !== undefined ? multiplayer.player_count : mpPlayers.length;
 
   const speed = truck.speed || 0;
   const speedLimit = truck.speedLimit || 80;
@@ -324,13 +318,16 @@ export default function GpsView({ data }) {
           container: mapContainerRef.current,
           style,
           center: initialGeo,
-          zoom: 9.5,
+          zoom: 11.8,
           minZoom: 4,
           maxZoom: 14,
           pitch: navMode === 'heading-up' ? 58 : 0,
           bearing: navMode === 'heading-up' ? (placement.heading || 0) : 0,
           attributionControl: false,
           maxBounds: [[-35, -28], [35, 30]],
+          touchZoomRotate: true,
+          touchPitch: true,
+          dragRotate: true,
         });
 
         map.on('load', () => {
@@ -496,115 +493,6 @@ export default function GpsView({ data }) {
             },
           });
 
-          // 6. Jogadores do TruckersMP (Multiplayer)
-          try {
-            const tmpCanvas = document.createElement('canvas');
-            tmpCanvas.width = 36;
-            tmpCanvas.height = 36;
-            const ctx = tmpCanvas.getContext('2d');
-            if (ctx) {
-              ctx.clearRect(0, 0, 36, 36);
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-              ctx.shadowBlur = 6;
-              ctx.shadowOffsetY = 2;
-
-              ctx.fillStyle = '#10b981';
-              ctx.strokeStyle = '#ffffff';
-              ctx.lineWidth = 2.4;
-              ctx.beginPath();
-              ctx.moveTo(18, 4);
-              ctx.lineTo(31, 31);
-              ctx.lineTo(18, 24);
-              ctx.lineTo(5, 31);
-              ctx.closePath();
-              ctx.fill();
-              ctx.stroke();
-
-              const imgData = ctx.getImageData(0, 0, 36, 36);
-              if (!map.hasImage('tmp-truck-arrow')) {
-                map.addImage('tmp-truck-arrow', imgData);
-              }
-            }
-          } catch (e) {
-            console.warn('[MapLibre TMP Image]', e);
-          }
-
-          map.addSource('multiplayer-players-source', {
-            type: 'geojson',
-            data: { type: 'FeatureCollection', features: [] },
-          });
-
-          // Glow pulsante ao redor do caminhão do outro jogador
-          map.addLayer({
-            id: 'multiplayer-players-glow',
-            type: 'circle',
-            source: 'multiplayer-players-source',
-            paint: {
-              'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 8, 10, 16, 14, 22],
-              'circle-color': '#10b981',
-              'circle-opacity': 0.28,
-              'circle-stroke-color': '#34d399',
-              'circle-stroke-width': 1.2,
-            },
-          });
-
-          // Seta direcional orientada pelo heading do veículo
-          map.addLayer({
-            id: 'multiplayer-players-arrow',
-            type: 'symbol',
-            source: 'multiplayer-players-source',
-            layout: {
-              'icon-image': 'tmp-truck-arrow',
-              'icon-rotate': ['get', 'heading'],
-              'icon-rotation-alignment': 'map',
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-size': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 10, 0.95, 14, 1.2],
-            },
-          });
-
-          // Rótulo com Nickname e Tag VTC do jogador
-          map.addLayer({
-            id: 'multiplayer-players-label',
-            type: 'symbol',
-            source: 'multiplayer-players-source',
-            minzoom: 6.5,
-            layout: {
-              'text-field': ['get', 'label'],
-              'text-font': ['Commissioner'],
-              'text-size': ['interpolate', ['linear'], ['zoom'], 6.5, 10, 9, 12, 12, 14],
-              'text-anchor': 'bottom',
-              'text-offset': [0, -1.3],
-              'text-allow-overlap': false,
-            },
-            paint: {
-              'text-color': '#6ee7b7',
-              'text-halo-color': '#020617',
-              'text-halo-width': 2.5,
-            },
-          });
-
-          const handlePlayerSelect = (e) => {
-            if (e.features && e.features[0]) {
-              const feat = e.features[0];
-              const p = feat.properties || {};
-              setSelectedPlayer({
-                id: p.id,
-                name: p.name,
-                tag: p.tag,
-                speed: p.speed,
-                distance: p.distance,
-                heading: p.heading,
-                coordinates: feat.geometry.coordinates,
-              });
-            }
-          };
-
-          map.on('click', 'multiplayer-players-arrow', handlePlayerSelect);
-          map.on('click', 'multiplayer-players-glow', handlePlayerSelect);
-          map.on('mouseenter', 'multiplayer-players-arrow', () => { map.getCanvas().style.cursor = 'pointer'; });
-          map.on('mouseleave', 'multiplayer-players-arrow', () => { map.getCanvas().style.cursor = ''; });
-
           setMapLoaded(true);
         });
 
@@ -704,42 +592,6 @@ export default function GpsView({ data }) {
       }
     }
   }, [destinationInfo, mapLoaded]);
-
-  // 8. Atualização Reativa dos Jogadores do TruckersMP no Mapa
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return;
-    const source = mapInstanceRef.current.getSource('multiplayer-players-source');
-    if (!source) return;
-
-    if (!showMultiplayer || !mpPlayers || mpPlayers.length === 0) {
-      source.setData({ type: 'FeatureCollection', features: [] });
-      return;
-    }
-
-    const features = mpPlayers.map(p => {
-      const coords = convertEts2ToGeo(p.x, p.z);
-      const label = p.tag ? `[${p.tag}] ${p.name}` : p.name;
-      return {
-        type: 'Feature',
-        id: p.id,
-        properties: {
-          id: p.id,
-          name: p.name,
-          tag: p.tag || '',
-          heading: p.heading || 0,
-          speed: p.speed || 0,
-          distance: p.distance || 0,
-          label,
-        },
-        geometry: {
-          type: 'Point',
-          coordinates: coords,
-        },
-      };
-    });
-
-    source.setData({ type: 'FeatureCollection', features });
-  }, [mpPlayers, showMultiplayer, mapLoaded]);
 
   // 8. Atualização de Alvos da Telemetria e Rastro Percorrido
   useEffect(() => {
@@ -863,15 +715,25 @@ export default function GpsView({ data }) {
     }
   };
 
-  // 10. Cálculo da Instrução de Manobra Real da Rota Viária
-  const maneuver = useMemo(() => {
+  // Função auxiliar para cálculo métrico real entre dois pontos Geo
+  const calcDistMeters = useCallback((p1, p2) => {
+    if (!p1 || !p2) return 0;
+    const dx = (p1[0] - p2[0]) * 72150.0;
+    const dy = (p1[1] - p2[1]) * 111000.0;
+    return Math.hypot(dx, dy);
+  }, []);
+
+  // 10. Cálculo Dinâmico da Próxima Curva e Distância em Tempo Real (Turn-by-Turn estilo Waze/Google Maps)
+  const activeManeuver = useMemo(() => {
     if (routeStatus === 'loading') {
       return {
         type: 'loading',
         iconName: 'RotateCcw',
         instruction: 'Calculando rota pelas rodovias...',
-        subText: destinationInfo?.name ? `Destino: ${destinationInfo.name}` : 'Consultando rede viária do ETS2',
-        distanceText: 'Calculando...',
+        turnText: 'Calculando...',
+        subText: destinationInfo?.name ? `${destinationInfo.taskTitle || 'Destino'}: ${destinationInfo.name}` : 'Consultando malha viária',
+        distanceText: '...',
+        distanceMeters: 0,
         color: '#38bdf8',
       };
     }
@@ -881,44 +743,132 @@ export default function GpsView({ data }) {
         type: 'error',
         iconName: 'ShieldAlert',
         instruction: 'Rota rodoviária indisponível',
+        turnText: 'Sem rota',
         subText: routeError || 'Verifique se a rodovia está mapeada',
         distanceText: nav?.distance ? `${nav.distance} km` : 'Sem rota',
+        distanceMeters: 0,
         color: '#ef4444',
       };
     }
 
-    if (maneuvers && maneuvers.length > 0) {
-      const m = maneuvers[0];
-      let iconName = 'ArrowUp';
-      let color = '#00e5ff';
+    const coords = routeGeoJson?.geometry?.coordinates;
+    const truckGeo = convertEts2ToGeo(placement.x, placement.z);
 
-      if (m.type === 'right') { iconName = 'ArrowRight'; color = '#38bdf8'; }
-      else if (m.type === 'left') { iconName = 'ArrowLeft'; color = '#38bdf8'; }
-      else if (m.type === 'slight-right') { iconName = 'ArrowUpRight'; color = '#00e5ff'; }
-      else if (m.type === 'slight-left') { iconName = 'ArrowUpLeft'; color = '#00e5ff'; }
-      else if (m.type === 'sharp-right') { iconName = 'CornerDownRight'; color = '#f59e0b'; }
-      else if (m.type === 'sharp-left') { iconName = 'CornerDownLeft'; color = '#f59e0b'; }
-      else if (m.type === 'destination') { iconName = 'Flag'; color = '#10b981'; }
-
+    if (!coords || coords.length === 0 || !maneuvers || maneuvers.length === 0) {
       return {
-        type: m.type,
-        iconName,
-        instruction: m.instruction,
-        subText: destinationInfo?.description || 'Siga pela rodovia',
-        distanceText: m.distance > 0 ? `${m.distance} m` : (routeStats?.distance_km ? `${routeStats.distance_km} km` : 'Em rota'),
-        color,
+        type: 'straight',
+        iconName: 'ArrowUp',
+        instruction: destinationInfo ? `Siga para ${destinationInfo.name}` : 'Siga pelas rodovias',
+        turnText: 'Siga em frente',
+        subText: destinationInfo?.description || destinationInfo?.name || 'Navegação rodoviária',
+        distanceText: routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav?.distance ? `${nav.distance} km` : '--'),
+        distanceMeters: 0,
+        color: '#00e5ff',
       };
     }
 
+    // 1. Encontra o índice da coordenada mais próxima do caminhão ao longo da rota
+    let closestIdx = 0;
+    let minD = Infinity;
+    for (let i = 0; i < coords.length; i++) {
+      const d = calcDistMeters(truckGeo, coords[i]);
+      if (d < minD) {
+        minD = d;
+        closestIdx = i;
+      }
+    }
+
+    // 2. Localiza a próxima manobra que ainda está à frente do caminhão
+    let nextM = null;
+    let mIdx = -1;
+    for (let i = 0; i < maneuvers.length; i++) {
+      const m = maneuvers[i];
+      const targetIdx = typeof m.coord_index === 'number' ? m.coord_index : 0;
+      const distDirect = m.point ? calcDistMeters(truckGeo, m.point) : Infinity;
+      if (targetIdx > closestIdx || distDirect > 30 || m.type === 'destination') {
+        nextM = m;
+        mIdx = i;
+        break;
+      }
+    }
+
+    if (!nextM) {
+      nextM = maneuvers[maneuvers.length - 1]; // Destino final
+    }
+
+    // 3. Calcula a distância real em metros percorrendo os nós da estrada
+    const targetIdx = typeof nextM.coord_index === 'number' ? nextM.coord_index : coords.length - 1;
+    let distAlongRoute = calcDistMeters(truckGeo, coords[closestIdx]);
+    const startStep = Math.min(closestIdx, targetIdx);
+    const endStep = Math.max(closestIdx, targetIdx);
+    for (let i = startStep; i < endStep && i < coords.length - 1; i++) {
+      distAlongRoute += calcDistMeters(coords[i], coords[i + 1]);
+    }
+
+    // 4. Formatação precisa da distância (ex: 350 m ou 1.2 km)
+    let distanceText = '';
+    if (distAlongRoute < 950) {
+      const roundedMeters = distAlongRoute > 100 
+        ? Math.round(distAlongRoute / 20) * 20 
+        : Math.max(10, Math.round(distAlongRoute / 10) * 10);
+      distanceText = `${roundedMeters} m`;
+    } else {
+      distanceText = `${(distAlongRoute / 1000).toFixed(1)} km`;
+    }
+
+    let iconName = 'ArrowUp';
+    let color = '#10b981';
+
+    if (nextM.type === 'right') { iconName = 'ArrowRight'; color = '#38bdf8'; }
+    else if (nextM.type === 'left') { iconName = 'ArrowLeft'; color = '#38bdf8'; }
+    else if (nextM.type === 'slight-right') { iconName = 'ArrowUpRight'; color = '#00e5ff'; }
+    else if (nextM.type === 'slight-left') { iconName = 'ArrowUpLeft'; color = '#00e5ff'; }
+    else if (nextM.type === 'sharp-right') { iconName = 'CornerDownRight'; color = '#f59e0b'; }
+    else if (nextM.type === 'sharp-left') { iconName = 'CornerDownLeft'; color = '#f59e0b'; }
+    else if (nextM.type === 'destination') { iconName = 'Flag'; color = '#10b981'; }
+
     return {
-      type: 'straight',
-      iconName: 'ArrowUp',
-      instruction: destinationInfo ? `Siga para ${destinationInfo.name}` : 'Siga pelas rodovias',
-      subText: destinationInfo?.is_approximate ? 'Destino aproximado (centro da cidade)' : 'Navegação rodoviária',
-      distanceText: routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav?.distance ? `${nav.distance} km` : '--'),
-      color: '#00e5ff',
+      type: nextM.type,
+      iconName,
+      instruction: nextM.turn_text || nextM.instruction || 'Siga pela rodovia',
+      turnText: nextM.turn_text || nextM.instruction,
+      subText: destinationInfo?.description || destinationInfo?.name || 'Siga pela rodovia',
+      distanceText,
+      distanceMeters: Math.round(distAlongRoute),
+      coord_index: nextM.coord_index,
+      color,
     };
-  }, [routeStatus, routeError, maneuvers, destinationInfo, routeStats, nav?.distance]);
+  }, [routeStatus, routeError, routeGeoJson, maneuvers, destinationInfo, routeStats, nav?.distance, placement.x, placement.z, calcDistMeters]);
+
+  // 11. Gatilhos de Voz em Português estilo Waze / Google Maps
+  useEffect(() => {
+    if (!voiceEnabled || !activeManeuver || routeStatus !== 'active') return;
+    const dist = activeManeuver.distanceMeters;
+    const mId = `${activeManeuver.coord_index}_${activeManeuver.type}`;
+    const instr = activeManeuver.instruction;
+
+    if (activeManeuver.type === 'destination') {
+      if (dist <= 650 && dist > 450 && lastSpokenManeuverStageRef.current !== `${mId}_600`) {
+        lastSpokenManeuverStageRef.current = `${mId}_600`;
+        speakVoice(`A 600 metros, seu destino final.`);
+      } else if (dist <= 50 && lastSpokenManeuverStageRef.current !== `${mId}_arrived`) {
+        lastSpokenManeuverStageRef.current = `${mId}_arrived`;
+        speakVoice(`Você chegou ao seu destino.`);
+      }
+      return;
+    }
+
+    // Pré-aviso a ~500 metros
+    if (dist <= 550 && dist > 350 && lastSpokenManeuverStageRef.current !== `${mId}_500`) {
+      lastSpokenManeuverStageRef.current = `${mId}_500`;
+      speakVoice(`A 500 metros, ${instr}.`);
+    }
+    // Aviso imediato a ~200-300 metros
+    else if (dist <= 300 && dist > 80 && lastSpokenManeuverStageRef.current !== `${mId}_300`) {
+      lastSpokenManeuverStageRef.current = `${mId}_300`;
+      speakVoice(`A 300 metros, ${instr}.`);
+    }
+  }, [activeManeuver, voiceEnabled, routeStatus, speakVoice]);
 
   return (
     <div className="gps-container gps-clean-theme">
@@ -933,16 +883,18 @@ export default function GpsView({ data }) {
             <ChevronLeft size={22} />
           </button>
           
-          {/* Botão Honesto de Trava de Tela Sempre Ativa */}
-          <button 
-            id="btn-wake-lock-status"
-            className={`wake-lock-pill-btn wake-${wakeLockInfo.type}`}
-            onClick={() => setIsWakeModalOpen(true)}
-            title="Clique para ver detalhes do bloqueio de tela"
-          >
-            <Zap size={14} />
-            <span>{wakeLockInfo.label}</span>
-          </button>
+          {/* Botão de Trava de Tela (Exibido apenas quando ativo, sem poluir com alerta negativo) */}
+          {wakeLockInfo.isActive && (
+            <button 
+              id="btn-wake-lock-status"
+              className={`wake-lock-pill-btn wake-${wakeLockInfo.type}`}
+              onClick={() => setIsWakeModalOpen(true)}
+              title="Trava de tela ativa"
+            >
+              <Zap size={14} />
+              <span>Tela Ativa</span>
+            </button>
+          )}
         </div>
 
         <div className="gps-status-items-group">
@@ -969,27 +921,22 @@ export default function GpsView({ data }) {
         <div ref={mapContainerRef} className="maplibre-container-root" />
       </div>
 
-      {/* 3. Card Flutuante de Manobra Superior */}
-      <div className="gps-maneuver-card">
-        <div 
-          className="maneuver-icon-box"
-          style={{
-            background: `${maneuver.color}22`,
-            borderColor: `${maneuver.color}66`,
-            boxShadow: `0 0 14px ${maneuver.color}33`,
-          }}
-        >
-          {renderManeuverIcon(maneuver.iconName, maneuver.color)}
+      {/* 3. Card Flutuante de Manobra Superior (Estilo Imagem 2 / Waze) */}
+      <div className="gps-maneuver-card gps-automotive-banner">
+        <div className="maneuver-main-side">
+          <div className="maneuver-icon-box">
+            {renderManeuverIcon(activeManeuver.iconName, activeManeuver.color)}
+          </div>
+          <div className="maneuver-dist-highlight">
+            {activeManeuver.distanceText}
+          </div>
         </div>
         <div className="maneuver-text-box">
-          <div className="maneuver-dist">
-            {maneuver.distanceText}
-          </div>
           <div className="maneuver-instruction">
-            {maneuver.instruction}
+            {activeManeuver.instruction}
           </div>
           <div className="maneuver-subtext">
-            {maneuver.subText}
+            {activeManeuver.subText}
           </div>
         </div>
         {routeStatus === 'error' && (
@@ -1003,47 +950,7 @@ export default function GpsView({ data }) {
         )}
       </div>
 
-      {/* 4. CARD FLUTUANTE DE JOGADOR TRUCKERSMP SELECIONADO */}
-      {selectedPlayer && showMultiplayer && (
-        <div className="tmp-player-card">
-          <div className="tmp-player-header">
-            <div className="tmp-player-title">
-              <Users size={18} color="#10b981" />
-              {selectedPlayer.tag && (
-                <span className="tmp-player-tag">{selectedPlayer.tag}</span>
-              )}
-              <span className="tmp-player-name">{selectedPlayer.name}</span>
-            </div>
-            <button 
-              className="tmp-player-close" 
-              onClick={() => setSelectedPlayer(null)}
-              title="Fechar detalhes"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          <div className="tmp-player-stats-grid">
-            <div className="tmp-stat-item">
-              <span className="tmp-stat-label">Distância</span>
-              <span className="tmp-stat-val">{Math.round(selectedPlayer.distance || 0)} m</span>
-            </div>
-            <div className="tmp-stat-item">
-              <span className="tmp-stat-label">Velocidade</span>
-              <span className="tmp-stat-val">{Math.round(selectedPlayer.speed || 0)} km/h</span>
-            </div>
-            <div className="tmp-stat-item">
-              <span className="tmp-stat-label">ID TruckersMP</span>
-              <span className="tmp-stat-val">#{selectedPlayer.id}</span>
-            </div>
-            <div className="tmp-stat-item">
-              <span className="tmp-stat-label">Orientação</span>
-              <span className="tmp-stat-val">{Math.round(selectedPlayer.heading || 0)}°</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 5. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
+      {/* 4. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
       {approachingRadar && (
         <div className="radar-ahead-warning-card blink-alert">
           <div className="radar-camera-badge">
@@ -1118,25 +1025,6 @@ export default function GpsView({ data }) {
           title="Ver Rota Completa até o Destino"
         >
           <Route size={22} color="#facc15" />
-        </button>
-
-        {/* Alternar Visualização de Jogadores do TruckersMP */}
-        <button 
-          id="btn-gps-multiplayer"
-          className={`gps-pill-btn ${showMultiplayer ? 'active-green' : ''}`}
-          onClick={() => {
-            const next = !showMultiplayer;
-            setShowMultiplayer(next);
-            if (!next) setSelectedPlayer(null);
-            speakVoice(next ? 'Jogadores do TruckersMP visíveis no mapa.' : 'Jogadores do TruckersMP ocultados.');
-          }}
-          title={showMultiplayer ? `TruckersMP: ${mpCount} jogadores por perto (Clique para ocultar)` : "Mostrar jogadores do TruckersMP"}
-          style={{ position: 'relative' }}
-        >
-          <Users size={22} color={showMultiplayer ? '#10b981' : '#94a3b8'} />
-          {showMultiplayer && mpCount > 0 && (
-            <span className="gps-btn-badge">{mpCount}</span>
-          )}
         </button>
 
         {/* Alternar Modo 3D vs 2D */}

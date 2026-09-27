@@ -8,15 +8,15 @@ import { CLUSTER_SKINS } from './skins';
 
 export default function SpeedometerView({ data, onSendAction, isMinimal = false }) {
   // 1. Alerta de Radar em tempo real no Modo Painel (com contagem regressiva em metros e voz)
-  // Ativado se não for minimal (evita duplicar fala quando em tela dividida com GPS)
+  // Ativado se não for minimal (evita duplicar fala e visual na tela mista)
   const approachingRadar = useRadarWarning(data?.placement, !isMinimal);
 
   // 2. Seletor de Modelo / Skin do Painel (Persistente no localStorage)
-  // REGRA: Na opção misto (isMinimal === true), força sempre o modelo padrão!
   const [currentSkinId, setCurrentSkinId] = useState(() => {
     return localStorage.getItem('ets2_cluster_skin') || 'default';
   });
   const [isSkinModalOpen, setIsSkinModalOpen] = useState(false);
+  const [wiperLevel, setWiperLevel] = useState(0);
 
   if (!data) return <div className="cluster-container"><p>Carregando telemetria...</p></div>;
 
@@ -25,6 +25,50 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
   const rpm = truck.rpm || 0;
   const isEngineOn = rpm > 350;
   const isHazardOn = lights.blinkerLeft && lights.blinkerRight;
+
+  // Lógica do botão unificado de Faróis: Desligado -> Lanterna -> Farol Baixo -> Farol Alto -> Desligado
+  let lightStage = 0;
+  let lightLabel = 'Farol Off';
+  let lightClass = '';
+  if (lights.beamHigh) {
+    lightStage = 3;
+    lightLabel = 'Farol Alto';
+    lightClass = 'tile-active-blue';
+  } else if (lights.beamLow) {
+    lightStage = 2;
+    lightLabel = 'Farol Baixo';
+    lightClass = 'tile-active-green';
+  } else if (lights.parkingLights) {
+    lightStage = 1;
+    lightLabel = 'Lanterna';
+    lightClass = 'tile-active-amber';
+  }
+
+  const handleCycleLights = () => {
+    if (lightStage === 0) {
+      handleAction('light');
+    } else if (lightStage === 1) {
+      handleAction('light');
+    } else if (lightStage === 2) {
+      handleAction('highbeam');
+    } else {
+      handleAction('highbeam');
+      setTimeout(() => handleAction('light'), 120);
+    }
+  };
+
+  // Lógica do botão unificado de Limpador: Desligado -> Nível 1 -> Nível 2 -> Nível 3 -> Desligado
+  const handleCycleWiper = () => {
+    const next = (wiperLevel + 1) % 4;
+    setWiperLevel(next);
+    handleAction('wipers');
+  };
+  const isWiperActive = truck.wipers || wiperLevel > 0;
+  const displayWiperLevel = wiperLevel > 0 ? wiperLevel : (truck.wipers ? 1 : 0);
+  const wiperLabel = displayWiperLevel > 0 ? `Limpador ${displayWiperLevel}` : 'Limpador';
+
+  // Piloto Automático Inteligente sincronizado com placas de trânsito
+  const isAutoPilotOn = Boolean(data.autopilot);
 
   // Seleciona a skin ativa
   const activeSkinId = isMinimal ? 'default' : currentSkinId;
@@ -48,8 +92,8 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
 
   return (
     <div className={`cluster-container ${isMinimal ? 'cluster-minimal' : ''}`}>
-      {/* ALERTA ANTECIPADO DE RADAR DE VELOCIDADE NO PAINEL */}
-      {approachingRadar && (
+      {/* ALERTA ANTECIPADO DE RADAR DE VELOCIDADE NO PAINEL (Oculto no modo misto para não duplicar com o mapa) */}
+      {!isMinimal && approachingRadar && (
         <div className="radar-ahead-warning-card blink-alert panel-radar-alert">
           <div className="radar-camera-badge">
             <Camera size={26} color="#ffffff" />
@@ -98,26 +142,15 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
           <span>{isEngineOn ? 'Motor Ligado' : 'Ligar Motor'}</span>
         </button>
 
-        {/* Farol Baixo (Tecla L) */}
+        {/* Único Botão de Faróis com Estágios (Desligado -> Lanterna -> Baixo -> Alto) */}
         <button 
           id="btn-bot-light"
-          className={`btn-action-tile ${lights.beamLow ? 'tile-active-green' : ''}`}
-          onClick={() => handleAction('light')}
-          title="Farol Baixo (Tecla L)"
+          className={`btn-action-tile ${lightClass}`}
+          onClick={handleCycleLights}
+          title={`Farol (Clique para alternar: Lanterna / Baixo / Alto / Desligado) - Estágio: ${lightLabel}`}
         >
           <Sun size={22} />
-          <span>Farol Baixo</span>
-        </button>
-
-        {/* Farol Alto (Tecla K) */}
-        <button 
-          id="btn-bot-highbeam"
-          className={`btn-action-tile ${lights.beamHigh ? 'tile-active-blue' : ''}`}
-          onClick={() => handleAction('highbeam')}
-          title="Farol Alto (Tecla K)"
-        >
-          <Sun size={22} />
-          <span>Farol Alto</span>
+          <span>{lightLabel}</span>
         </button>
 
         {/* Pisca-Alerta (Tecla F) */}
@@ -153,15 +186,26 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
           <span>Cruise</span>
         </button>
 
-        {/* Limpador de Para-brisa (Tecla P) */}
+        {/* Auto-Pilot Inteligente sincronizado com placas de trânsito (Cruise + Auto-Pilot) */}
+        <button 
+          id="btn-bot-autopilot"
+          className={`btn-action-tile ${isAutoPilotOn ? 'tile-active-blue' : ''}`}
+          onClick={() => handleAction('autopilot')}
+          title="Piloto Automático Inteligente por Placas (Acelera/Reduz conforme placas com Cruise ativo)"
+        >
+          <Gauge size={22} />
+          <span>{isAutoPilotOn ? 'AutoPilot ON' : 'AutoPilot'}</span>
+        </button>
+
+        {/* Único Botão de Limpador com Níveis (Desligado -> 1 -> 2 -> 3) */}
         <button 
           id="btn-bot-wipers"
-          className="btn-action-tile"
-          onClick={() => handleAction('wipers')}
-          title="Limpadores (Tecla P)"
+          className={`btn-action-tile ${displayWiperLevel > 0 ? 'tile-active-green' : ''}`}
+          onClick={handleCycleWiper}
+          title="Limpadores (Níveis: 1, 2, 3 e Desligado)"
         >
           <CloudRain size={22} />
-          <span>Limpador</span>
+          <span>{wiperLabel}</span>
         </button>
       </div>
 

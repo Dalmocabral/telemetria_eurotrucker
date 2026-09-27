@@ -1375,62 +1375,78 @@ body {
   font-size: 0.82rem;
 }
 
-/* 2. Card de Manobra Superior (Estilo Google Maps) */
-.gps-maneuver-card {
+/* 2. Banner de Manobra Automotivo Superior (Estilo Waze / Google Maps / Imagem 2) */
+.gps-maneuver-card,
+.gps-maneuver-card.gps-automotive-banner {
   position: absolute;
   top: 66px;
   left: 20px;
   z-index: 999;
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: rgba(15, 23, 42, 0.94);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 12px 22px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-  min-width: 250px;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(6, 44, 40, 0.96) 0%, rgba(3, 24, 28, 0.94) 100%);
+  backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  padding: 10px 20px 10px 16px;
+  border-radius: 18px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 15px rgba(16, 185, 129, 0.15);
+  min-width: 260px;
+  max-width: 440px;
 }
 
-.maneuver-icon-box {
+.maneuver-main-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  padding-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.maneuver-main-side .maneuver-icon-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: rgba(0, 229, 255, 0.12);
-  border: 1px solid rgba(0, 229, 255, 0.35);
+  width: 46px;
+  height: 46px;
+  background: transparent;
+  border: none;
+}
+
+.maneuver-dist-highlight {
+  font-family: var(--font-digital);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1.0;
+  margin-top: 2px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .maneuver-text-box {
   display: flex;
   flex-direction: column;
-}
-
-.maneuver-dist {
-  font-family: var(--font-digital);
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-  line-height: 1.1;
+  flex: 1;
 }
 
 .maneuver-instruction {
   font-family: var(--font-body);
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin-top: 2px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: 0.2px;
 }
 
 .maneuver-subtext {
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: #94a3b8;
-  margin-top: 1px;
+  margin-top: 3px;
 }
 
 /* 3. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Avisa antes com contagem regressiva em metros) */
