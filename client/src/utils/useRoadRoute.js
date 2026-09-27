@@ -27,10 +27,10 @@ export function useRoadRoute(placement, job, enabled = true) {
   const hasSource = Boolean(job?.citySource || job?.citySourceId || job?.companySource || job?.companySourceId);
   const isGoingToPickup = isOnJob && !isCargoLoaded && hasSource;
 
-  const targetCity = isGoingToPickup ? (job?.citySource || job?.citySourceId) : (job?.cityDestination || job?.cityDestinationId || job?.cityDst);
-  const targetCityId = isGoingToPickup ? (job?.citySourceId || '') : (job?.cityDestinationId || job?.cityDstId || '');
-  const targetCompany = isGoingToPickup ? (job?.companySource || job?.companySourceId) : (job?.companyDestination || job?.companyDestinationId || job?.compDst);
-  const targetCompanyId = isGoingToPickup ? (job?.companySourceId || '') : (job?.companyDestinationId || job?.compDstId || '');
+  const targetCity = isOnJob ? (isGoingToPickup ? (job?.citySource || job?.citySourceId) : (job?.cityDestination || job?.cityDestinationId || job?.cityDst)) : '';
+  const targetCityId = isOnJob ? (isGoingToPickup ? (job?.citySourceId || '') : (job?.cityDestinationId || job?.cityDstId || '')) : '';
+  const targetCompany = isOnJob ? (isGoingToPickup ? (job?.companySource || job?.companySourceId) : (job?.companyDestination || job?.companyDestinationId || job?.compDst)) : '';
+  const targetCompanyId = isOnJob ? (isGoingToPickup ? (job?.companySourceId || '') : (job?.companyDestinationId || job?.compDstId || '')) : '';
 
   const truckX = placement?.x || 0;
   const truckZ = placement?.z || 0;

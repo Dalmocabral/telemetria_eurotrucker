@@ -217,38 +217,38 @@ class TestErrorHandlingAndEdgeCases(unittest.TestCase):
         self.assertEqual(path, [])
 
 
-class TestSimulatedTelemetryIntegration(unittest.TestCase):
-    """Valida a integração ponta-a-ponta com a telemetria simulada sem o jogo aberto."""
+class TestDisconnectedTelemetryIntegration(unittest.TestCase):
+    """Valida o estado desconectado limpo sem modo demonstração e teste de rota direto."""
 
     @classmethod
     def setUpClass(cls):
         router_instance.load_data()
 
-    def test_demo_telemetry_route(self):
-        """Obtém dados da telemetria simulada e calcula rota com sucesso."""
+    def test_disconnected_telemetry_state(self):
+        """Verifica que quando o jogo está fechado, o estado é desconectado e limpo (sem demo)."""
         reader = ETS2Reader()
         data = reader.get_data()
 
-        # Telemetria simulada possui caminhão em Paris e frete para Lille (Tradeaux)
-        job = data.get("job", {})
+        self.assertFalse(data.get("connected"))
+        self.assertFalse(data.get("simulated"))
+        self.assertEqual(data.get("truck", {}).get("speed"), 0.0)
+        self.assertFalse(data.get("job", {}).get("onJob"))
+
+        # Valida cálculo de rota direto pelo router (ex: Antuérpia para Lille)
         placement = data.get("placement", {})
-
-        self.assertEqual(job.get("cityDstId"), "lille")
-        self.assertEqual(job.get("compDstId"), "tradeaux")
-
         route = router_instance.calculate_route(
             start_x=placement["x"],
             start_z=placement["z"],
-            city_dst_id=job.get("cityDstId"),
-            city_dst_name=job.get("cityDst"),
-            comp_dst_id=job.get("compDstId"),
-            comp_dst_name=job.get("compDst"),
+            city_dst_id="lille",
+            city_dst_name="Lille",
+            comp_dst_id="tradeaux",
+            comp_dst_name="Tradeaux",
         )
 
         self.assertTrue(route["success"])
         self.assertEqual(route["destination"]["city"], "Lille")
         self.assertIn("Tradeaux", route["destination"]["name"])
-        self.assertGreater(route["distance_km"], 200.0)
+        self.assertGreater(route["distance_km"], 50.0)
 
 
 if __name__ == "__main__":

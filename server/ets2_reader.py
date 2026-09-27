@@ -38,16 +38,10 @@ class ETS2Reader:
         self.parser_version = None
         self.connected_name = None
         
-        # Variáveis internas para o Modo Demonstração
-        self._sim_time = 0.0
-        self._sim_speed = 0.0
-        self._sim_heading = 0.0
-        self._sim_x = -28842.0
-        self._sim_z = 4982.0
-        self._sim_fuel = 1090.0
-        self._sim_blinker_left = False
-        self._sim_blinker_right = False
-        self._sim_cruise = False
+        # Histórico da última posição válida para manter a câmera suave no mapa ao desconectar
+        self._last_known_x = -21700.68
+        self._last_known_z = -5700.77
+        self._last_known_heading = 0.0
         self._last_connect_try = 0.0
 
     def try_connect_shared_memory(self) -> bool:
@@ -111,7 +105,7 @@ class ETS2Reader:
     def get_data(self) -> Dict[str, Any]:
         """
         Retorna o dicionário de telemetria formatado.
-        Lê dados reais se o jogo estiver conectado; senão, entrega simulação de teste.
+        Lê dados reais se o jogo estiver conectado; senão, entrega estado real desconectado.
         """
         if not self.is_connected or not self.mmap_obj:
             self.try_connect_shared_memory()
@@ -125,7 +119,7 @@ class ETS2Reader:
                 raw = self.parser_version.parse_data(b)
                 return self._format_real_data(raw)
             except Exception as e:
-                # Se falhar (ex: jogo fechou), reseta e volta ao fallback
+                # Se falhar (ex: jogo fechou), reseta e volta ao fallback desconectado
                 print(f"[ETS2Reader] Conexão com jogo encerrada: {e}")
                 self.is_connected = False
                 try:
@@ -135,7 +129,7 @@ class ETS2Reader:
                 self.mmap_obj = None
                 self.parser_version = None
 
-        return self._generate_simulated_data()
+        return self._get_disconnected_data()
 
     def _format_real_data(self, d: Dict[str, Any]) -> Dict[str, Any]:
         """Formata os dados brutos lidos da memória do ETS2 para o padrão esperado pelo frontend."""
@@ -202,6 +196,22 @@ class ETS2Reader:
         beam_high = bool(d.get("lightsBeamHigh", False))
         park_lights = bool(d.get("lightsParking", False))
 
+        if coord_x != 0.0 or coord_z != 0.0:
+            self._last_known_x = coord_x
+            self._last_known_z = coord_z
+            self._last_known_heading = heading_deg
+
+        on_job = bool(d.get("onJob", False))
+        city_src = str(d.get("citySrc", "") or "") if on_job else ""
+        city_src_id = str(d.get("citySrcId", "") or "") if on_job else ""
+        city_dst = str(d.get("cityDst", "") or "") if on_job else ""
+        city_dst_id = str(d.get("cityDstId", "") or "") if on_job else ""
+        comp_src = str(d.get("compSrc", "") or "") if on_job else ""
+        comp_src_id = str(d.get("compSrcId", "") or "") if on_job else ""
+        comp_dst = str(d.get("compDst", "") or "") if on_job else ""
+        comp_dst_id = str(d.get("compDstId", "") or "") if on_job else ""
+        cargo_name = str(d.get("cargo", "Sem Carga") or "Sem Carga") if on_job else "Sem Carga"
+
         return {
             "connected": True,
             "simulated": False,
@@ -249,24 +259,24 @@ class ETS2Reader:
                 "reverseLights": bool(d.get("lightsReverse", False)),
             },
             "job": {
-                "cargo": str(d.get("cargo", "Sem Carga") or "Sem Carga"),
-                "cargoWeight": round(d.get("cargoMass", 0.0) or 0.0),
-                "cargoDamage": round(d.get("cargoDamage", 0.0) or 0.0, 2),
-                "citySource": str(d.get("citySrc", "Origem") or "Origem"),
-                "citySourceId": str(d.get("citySrcId", "") or ""),
-                "cityDestination": str(d.get("cityDst", "Destino") or "Destino"),
-                "cityDestinationId": str(d.get("cityDstId", "") or ""),
-                "cityDst": str(d.get("cityDst", "Destino") or "Destino"),
-                "cityDstId": str(d.get("cityDstId", "") or ""),
-                "companySource": str(d.get("compSrc", "") or ""),
-                "companySourceId": str(d.get("compSrcId", "") or ""),
-                "companyDestination": str(d.get("compDst", "") or ""),
-                "companyDestinationId": str(d.get("compDstId", "") or ""),
-                "compDst": str(d.get("compDst", "") or ""),
-                "compDstId": str(d.get("compDstId", "") or ""),
-                "income": int(d.get("jobIncome", 0) or 0),
-                "deadline": "Em andamento",
-                "onJob": bool(d.get("onJob", False)),
+                "cargo": cargo_name,
+                "cargoWeight": round(d.get("cargoMass", 0.0) or 0.0) if on_job else 0,
+                "cargoDamage": round(d.get("cargoDamage", 0.0) or 0.0, 2) if on_job else 0.0,
+                "citySource": city_src,
+                "citySourceId": city_src_id,
+                "cityDestination": city_dst,
+                "cityDestinationId": city_dst_id,
+                "cityDst": city_dst,
+                "cityDstId": city_dst_id,
+                "companySource": comp_src,
+                "companySourceId": comp_src_id,
+                "companyDestination": comp_dst,
+                "companyDestinationId": comp_dst_id,
+                "compDst": comp_dst,
+                "compDstId": comp_dst_id,
+                "income": int(d.get("jobIncome", 0) or 0) if on_job else 0,
+                "deadline": "Em andamento" if on_job else "--",
+                "onJob": on_job,
                 "isCargoLoaded": bool(d.get("isCargoLoaded", False) or (isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False))),
                 "trailerAttached": bool(isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False)),
             },
@@ -283,150 +293,102 @@ class ETS2Reader:
                 "heading": heading_deg,
             },
             "multiplayer": truckersmp_bridge_instance.get_telemetry_payload(
-                coord_x, coord_z, heading_deg, enable_simulation=True
+                coord_x, coord_z, heading_deg, enable_simulation=False
             ),
         }
 
-    def _generate_simulated_data(self) -> Dict[str, Any]:
-        """Gera dados realistas de demonstração caso o jogo esteja fechado."""
-        self._sim_time += 0.05
-        t = self._sim_time
-
-        cycle = (t % 60)
-        if cycle < 25:
-            target_speed = 85.0 * (cycle / 25)
-            self._sim_cruise = False
-        elif cycle < 45:
-            target_speed = 85.0 + math.sin(t * 0.5) * 1.5
-            self._sim_cruise = True
-        elif cycle < 55:
-            target_speed = 35.0
-            self._sim_cruise = False
-        else:
-            target_speed = 60.0
-            self._sim_cruise = False
-
-        self._sim_speed += (target_speed - self._sim_speed) * 0.04
-        kmh = max(0.0, self._sim_speed)
-
-        if kmh < 5:
-            gear = 1
-            rpm = 750 + (kmh / 5.0) * 800
-        elif kmh < 15:
-            gear = 3
-            rpm = 1000 + ((kmh - 5) / 10.0) * 1000
-        elif kmh < 30:
-            gear = 5
-            rpm = 1100 + ((kmh - 15) / 15.0) * 1000
-        elif kmh < 50:
-            gear = 7
-            rpm = 1100 + ((kmh - 30) / 20.0) * 900
-        elif kmh < 70:
-            gear = 10
-            rpm = 1150 + ((kmh - 50) / 20.0) * 800
-        else:
-            gear = 12
-            rpm = 1100 + ((kmh - 70) / 25.0) * 550
-
-        rpm += math.sin(t * 4) * 15
-        speed_ms = (kmh / 3.6)
-        self._sim_heading += math.sin(t * 0.2) * 0.015
-        self._sim_x += math.cos(self._sim_heading) * speed_ms * 0.05 * 10
-        self._sim_z += math.sin(self._sim_heading) * speed_ms * 0.05 * 10
-
-        if math.sin(t * 0.2) > 0.6:
-            self._sim_blinker_right = (int(t * 2.5) % 2 == 0)
-            self._sim_blinker_left = False
-        elif math.sin(t * 0.2) < -0.6:
-            self._sim_blinker_left = (int(t * 2.5) % 2 == 0)
-            self._sim_blinker_right = False
-        else:
-            self._sim_blinker_left = False
-            self._sim_blinker_right = False
-
-        self._sim_fuel = max(10.0, 1090.0 - (t * 0.005))
-        heading_deg = math.degrees(self._sim_heading) % 360
+    def _get_disconnected_data(self) -> Dict[str, Any]:
+        """
+        Retorna o estado seguro e limpo quando o Euro Truck Simulator 2 estiver fechado.
+        Não gera dados simulados ou falsos, mantendo o painel com leitura real de jogo desconectado.
+        """
+        px = getattr(self, "_last_known_x", -21700.68)
+        pz = getattr(self, "_last_known_z", -5700.77)
+        pheading = getattr(self, "_last_known_heading", 0.0)
 
         return {
             "connected": False,
-            "simulated": True,
+            "simulated": False,
             "game": {
-                "paused": False,
-                "time": "14:32",
+                "paused": True,
+                "time": "--:--",
                 "gameVersion": "1.50+",
             },
             "truck": {
-                "speed": round(kmh, 1),
+                "speed": 0.0,
                 "speedLimit": 80,
-                "rpm": int(rpm),
+                "rpm": 0,
                 "maxRpm": 2500,
-                "gear": gear,
-                "displayedGear": f"D{gear}" if gear > 0 else ("N" if gear == 0 else f"R{abs(gear)}"),
-                "suggestedGear": min(12, gear + 1) if rpm > 1700 else (max(1, gear - 1) if rpm < 1000 and gear > 1 else gear),
-                "fuel": round(self._sim_fuel, 1),
-                "fuelCapacity": 1200,
-                "fuelAverageConsumption": 29.4,
+                "gear": 0,
+                "displayedGear": "N",
+                "suggestedGear": 1,
+                "fuel": 0.0,
+                "fuelCapacity": 1200.0,
+                "fuelAverageConsumption": 30.0,
                 "fuelWarning": False,
-                "waterTemperature": 88.5,
-                "oilTemperature": 92.0,
-                "brakeAirPressure": 8.2,
-                "batteryVoltage": 24.2,
-                "retarderLevel": 1 if (cycle >= 45 and cycle < 55) else 0,
-                "parkBrake": False,
+                "waterTemperature": 0.0,
+                "oilTemperature": 0.0,
+                "brakeAirPressure": 8.0,
+                "batteryVoltage": 24.0,
+                "retarderLevel": 0,
+                "parkBrake": True,
                 "motorBrake": False,
-                "cruiseControl": self._sim_cruise,
-                "cruiseControlSpeed": 85 if self._sim_cruise else 0,
-                "odometer": round(142580 + (t * 0.02), 1),
-                "wearEngine": 0.02,
-                "wearTransmission": 0.01,
-                "wearCabin": 0.00,
-                "wearChassis": 0.01,
-                "wearWheels": 0.04,
+                "cruiseControl": False,
+                "cruiseControlSpeed": 0,
+                "odometer": 0.0,
+                "wearEngine": 0.0,
+                "wearTransmission": 0.0,
+                "wearCabin": 0.0,
+                "wearChassis": 0.0,
+                "wearWheels": 0.0,
             },
             "lights": {
-                "blinkerLeft": self._sim_blinker_left,
-                "blinkerRight": self._sim_blinker_right,
-                "beamLow": True,
+                "blinkerLeft": False,
+                "blinkerRight": False,
+                "beamLow": False,
                 "beamHigh": False,
-                "parkingLights": True,
+                "parkingLights": False,
                 "beacon": False,
-                "brakeLights": (cycle >= 45 and cycle < 55),
+                "brakeLights": False,
                 "reverseLights": False,
             },
             "job": {
-                "cargo": "Carga de Teste (Simulação)",
-                "cargoWeight": 18500,
+                "cargo": "Aguardando ETS2...",
+                "cargoWeight": 0,
                 "cargoDamage": 0.0,
-                "citySource": "Paris",
-                "citySourceId": "paris",
-                "cityDestination": "Lille",
-                "cityDestinationId": "lille",
-                "cityDst": "Lille",
-                "cityDstId": "lille",
-                "companySource": "EuroGoodies",
-                "companySourceId": "eurogoodies",
-                "companyDestination": "Tradeaux",
-                "companyDestinationId": "tradeaux",
-                "compDst": "Tradeaux",
-                "compDstId": "tradeaux",
-                "income": 14200,
-                "deadline": "Restam 4h 15min",
-                "onJob": True,
-                "isCargoLoaded": True,
-                "trailerAttached": True,
+                "citySource": "",
+                "citySourceId": "",
+                "cityDestination": "",
+                "cityDestinationId": "",
+                "cityDst": "",
+                "cityDstId": "",
+                "companySource": "",
+                "companySourceId": "",
+                "companyDestination": "",
+                "companyDestinationId": "",
+                "compDst": "",
+                "compDstId": "",
+                "income": 0,
+                "deadline": "--",
+                "onJob": False,
+                "isCargoLoaded": False,
+                "trailerAttached": False,
             },
             "navigation": {
-                "distance": max(10, int(430 - (t * 0.02))),
-                "time": "4h 25m",
-                "nextRestStop": "6h 15m",
+                "distance": 0,
+                "distanceMeters": 0,
+                "time": "--:--",
+                "nextRestStop": "--:--",
             },
             "placement": {
-                "x": round(self._sim_x, 2),
+                "x": px,
                 "y": 0.0,
-                "z": round(self._sim_z, 2),
-                "heading": round(heading_deg, 1),
+                "z": pz,
+                "heading": pheading,
             },
-            "multiplayer": truckersmp_bridge_instance.get_telemetry_payload(
-                self._sim_x, self._sim_z, heading_deg, enable_simulation=False
-            ),
+            "multiplayer": {
+                "connected": False,
+                "player_count": 0,
+                "players": [],
+            },
         }

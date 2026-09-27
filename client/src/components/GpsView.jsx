@@ -296,7 +296,7 @@ export default function GpsView({ data }) {
               layout: { 'line-join': 'round', 'line-cap': 'round' },
               paint: {
                 'line-color': '#09101d',
-                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.2, 8, 4.8, 10, 9.0, 13, 15.0],
+                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 8, 5.0, 10, 9.0, 13, 15.0],
               },
             },
             {
@@ -306,8 +306,8 @@ export default function GpsView({ data }) {
               'source-layer': 'ets2',
               layout: { 'line-join': 'round', 'line-cap': 'round' },
               paint: {
-                'line-color': '#607599',
-                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.4, 8, 3.2, 10, 6.5, 13, 11.0],
+                'line-color': '#5a78a2',
+                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.6, 8, 3.5, 10, 6.8, 13, 11.5],
                 'line-opacity': 1.0,
               },
             },
@@ -318,9 +318,9 @@ export default function GpsView({ data }) {
           container: mapContainerRef.current,
           style,
           center: initialGeo,
-          zoom: 11.8,
+          zoom: 9.5,
           minZoom: 4,
-          maxZoom: 14,
+          maxZoom: 13,
           pitch: navMode === 'heading-up' ? 58 : 0,
           bearing: navMode === 'heading-up' ? (placement.heading || 0) : 0,
           attributionControl: false,
@@ -330,8 +330,14 @@ export default function GpsView({ data }) {
           dragRotate: true,
         });
 
+        map.on('error', (e) => {
+          console.warn('[MapLibre error]', e.error ? e.error.message : e);
+        });
+
         map.on('load', () => {
+          console.log('[MapLibre] Map loaded successfully!');
           if (!isMounted) return;
+          map.resize();
 
           // 1. Rota Rodoviária Planejada (Calculada sobre a rede de estradas reais do ETS2)
           map.addSource('planned-route-source', {
@@ -531,10 +537,28 @@ export default function GpsView({ data }) {
 
         markerElRef.current = marker;
         mapInstanceRef.current = map;
+        window.__maplibre_map = map;
+
+        const resizeObserver = new ResizeObserver(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.resize();
+          }
+        });
+        if (mapContainerRef.current) {
+          resizeObserver.observe(mapContainerRef.current);
+        }
 
         map.on('dragstart', () => {
           setFollowTruck(false);
         });
+
+        // Força resize após pequena espera para garantir layout estabilizado
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.resize();
+          }
+        }, 100);
+
       } catch (err) {
         console.error('Erro ao inicializar MapLibre GL:', err);
       }
@@ -735,6 +759,19 @@ export default function GpsView({ data }) {
         distanceText: '...',
         distanceMeters: 0,
         color: '#38bdf8',
+      };
+    }
+
+    if (!job?.onJob || routeStatus === 'idle') {
+      return {
+        type: 'straight',
+        iconName: 'ArrowUp',
+        instruction: 'Siga pelas rodovias',
+        turnText: 'Siga em frente',
+        subText: 'Navegação rodoviária livre',
+        distanceText: '--',
+        distanceMeters: 0,
+        color: '#00e5ff',
       };
     }
 
