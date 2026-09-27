@@ -39,7 +39,11 @@ export default function App() {
 
     const connectWebSocket = () => {
       const host = window.location.hostname || 'localhost';
-      const wsUrl = `ws://${host}:8000/ws`;
+      const isHttps = window.location.protocol === 'https:';
+      const wsProtocol = isHttps ? 'wss:' : 'ws:';
+      const defaultPort = isHttps ? '8443' : '8000';
+      const port = (window.location.port && window.location.port !== '5173') ? window.location.port : defaultPort;
+      const wsUrl = `${wsProtocol}//${host}:${port}/ws`;
 
       try {
         const ws = new WebSocket(wsUrl);

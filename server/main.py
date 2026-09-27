@@ -3,7 +3,7 @@ import io
 import socket
 import os
 import sys
-from typing import Set
+from typing import Set, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect

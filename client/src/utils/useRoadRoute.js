@@ -57,7 +57,9 @@ export function useRoadRoute(placement, job, enabled = true) {
     try {
       const host = window.location.hostname || 'localhost';
       const protocol = window.location.protocol;
-      const port = window.location.port || (protocol === 'https:' ? '8443' : '8000');
+      const isHttps = protocol === 'https:';
+      const defaultPort = isHttps ? '8443' : '8000';
+      const port = (window.location.port === '5173') ? defaultPort : (window.location.port || defaultPort);
       
       const queryParams = new URLSearchParams({
         start_x: truckX.toString(),

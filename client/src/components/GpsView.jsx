@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Protocol } from 'pmtiles';
+import { Protocol, PMTiles } from 'pmtiles';
+import { BlobSource } from '../utils/BlobSource';
 import { 
   Crosshair, ZoomIn, ZoomOut, 
   ArrowUp, ArrowUpRight, ArrowRight, ArrowUpLeft, ArrowLeft,
@@ -201,8 +202,16 @@ export default function GpsView({ data }) {
         const initialGeo = convertEts2ToGeo(placement.x, placement.z);
         currentPosRef.current = [...initialGeo];
 
-        const roadsPmtiles = new PMTiles('/maps/ets2/map-data/tiles/roads.mp3');
-        const allDataPmtiles = new PMTiles('/maps/ets2/map-data/tiles/map-data-combined.mp3');
+        // Carrega os arquivos vetoriais PMTiles na memória via BlobSource
+        const [roadsBlob, dataBlob] = await Promise.all([
+          fetch('/maps/ets2/map-data/tiles/roads.mp3').then(r => r.blob()),
+          fetch('/maps/ets2/map-data/tiles/map-data-combined.mp3').then(r => r.blob()),
+        ]);
+
+        if (!isMounted) return;
+
+        const roadsPmtiles = new PMTiles(new BlobSource(roadsBlob, 'roads'));
+        const allDataPmtiles = new PMTiles(new BlobSource(dataBlob, 'all-data'));
         protocol.add(roadsPmtiles);
         protocol.add(allDataPmtiles);
 
@@ -211,41 +220,72 @@ export default function GpsView({ data }) {
           glyphs: '/glyphs/{fontstack}/{range}.pbf',
           sprite: `${window.location.origin}/sprites/ets2/sprites`,
           sources: {
-            ets2: {
+            'ets2': {
               type: 'vector',
-              url: 'pmtiles:///maps/ets2/map-data/tiles/roads.mp3',
+              tiles: ['pmtiles://roads/{z}/{x}/{y}'],
+              minzoom: 5,
+              maxzoom: 9,
             },
             'all-data': {
               type: 'vector',
-              url: 'pmtiles:///maps/ets2/map-data/tiles/map-data-combined.mp3',
+              tiles: ['pmtiles://all-data/{z}/{x}/{y}'],
+              minzoom: 5,
+              maxzoom: 9,
             },
           },
           layers: [
             {
               id: 'background',
               type: 'background',
-              paint: { 'background-color': '#080d1a' },
+              paint: { 'background-color': '#080d16' },
             },
             {
-              id: 'landuse',
+              id: 'countries',
               type: 'fill',
               source: 'all-data',
-              'source-layer': 'landuse',
-              paint: { 'fill-color': '#0f172a', 'fill-opacity': 0.8 },
+              'source-layer': 'countries',
+              paint: {
+                'fill-color': '#111827',
+                'fill-opacity': 0.95,
+              },
+            },
+            {
+              id: 'country-borders',
+              type: 'line',
+              source: 'all-data',
+              'source-layer': 'countries',
+              paint: {
+                'line-color': '#2a3b52',
+                'line-width': 1.8,
+                'line-dasharray': [3, 2],
+              },
             },
             {
               id: 'water',
               type: 'fill',
               source: 'all-data',
               'source-layer': 'water',
-              paint: { 'fill-color': '#071830', 'fill-opacity': 0.9 },
+              paint: { 'fill-color': '#060a12' },
             },
             {
-              id: 'prefabs',
+              id: 'water-outline',
+              type: 'line',
+              source: 'all-data',
+              'source-layer': 'water',
+              paint: {
+                'line-color': '#142033',
+                'line-width': 2,
+              },
+            },
+            {
+              id: 'prefab-zones',
               type: 'fill',
               source: 'all-data',
               'source-layer': 'prefabs',
-              paint: { 'fill-color': '#1e293b', 'fill-opacity': 0.85 },
+              paint: {
+                'fill-color': '#1e293b',
+                'fill-opacity': 0.85,
+              },
             },
             {
               id: 'roads-casing',
