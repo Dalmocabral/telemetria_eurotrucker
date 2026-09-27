@@ -48,7 +48,7 @@ function renderManeuverIcon(iconName, color = '#ffffff') {
   }
 }
 
-export default function GpsView({ data }) {
+export default function GpsView({ data, isEmbedded = false }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerElRef = useRef(null);
@@ -908,50 +908,52 @@ export default function GpsView({ data }) {
   }, [activeManeuver, voiceEnabled, routeStatus, speakVoice]);
 
   return (
-    <div className="gps-container gps-clean-theme">
-      {/* 1. Barra de Status Superior */}
-      <div className="gps-status-header-bar">
-        <div className="gps-header-left-actions">
-          <button 
-            className="gps-header-mini-btn" 
-            onClick={() => window.history.back()} 
-            title="Voltar"
-          >
-            <ChevronLeft size={22} />
-          </button>
-          
-          {/* Botão de Trava de Tela (Exibido apenas quando ativo, sem poluir com alerta negativo) */}
-          {wakeLockInfo.isActive && (
+    <div className={`gps-container gps-clean-theme ${isEmbedded ? 'gps-embedded-container' : ''}`}>
+      {/* 1. Barra de Status Superior (somente tela cheia) */}
+      {!isEmbedded && (
+        <div className="gps-status-header-bar">
+          <div className="gps-header-left-actions">
             <button 
-              id="btn-wake-lock-status"
-              className={`wake-lock-pill-btn wake-${wakeLockInfo.type}`}
-              onClick={() => setIsWakeModalOpen(true)}
-              title="Trava de tela ativa"
+              className="gps-header-mini-btn" 
+              onClick={() => window.history.back()} 
+              title="Voltar"
             >
-              <Zap size={14} />
-              <span>Tela Ativa</span>
+              <ChevronLeft size={22} />
             </button>
-          )}
-        </div>
+            
+            {/* Botão de Trava de Tela (Exibido apenas quando ativo, sem poluir com alerta negativo) */}
+            {wakeLockInfo.isActive && (
+              <button 
+                id="btn-wake-lock-status"
+                className={`wake-lock-pill-btn wake-${wakeLockInfo.type}`}
+                onClick={() => setIsWakeModalOpen(true)}
+                title="Trava de tela ativa"
+              >
+                <Zap size={14} />
+                <span>Tela Ativa</span>
+              </button>
+            )}
+          </div>
 
-        <div className="gps-status-items-group">
-          <div className="gps-status-item">
-            <strong>{Math.round(speed)}</strong> <span>km/h</span>
-          </div>
-          <div className="gps-status-item">
-            <Fuel size={14} color="#00e5ff" />
-            <span>{Math.round(truck.fuel || 0)} L</span>
-          </div>
-          <div className="gps-status-item">
-            <Moon size={14} color="#f5a623" />
-            <span>{nav.nextRestStop || '06:00'}</span>
-          </div>
-          <div className="gps-status-item">
-            <Clock size={14} color="#94a3b8" />
-            <span>{game.time || '14:30'}</span>
+          <div className="gps-status-items-group">
+            <div className="gps-status-item">
+              <strong>{Math.round(speed)}</strong> <span>km/h</span>
+            </div>
+            <div className="gps-status-item">
+              <Fuel size={14} color="#00e5ff" />
+              <span>{Math.round(truck.fuel || 0)} L</span>
+            </div>
+            <div className="gps-status-item">
+              <Moon size={14} color="#f5a623" />
+              <span>{nav.nextRestStop || '06:00'}</span>
+            </div>
+            <div className="gps-status-item">
+              <Clock size={14} color="#94a3b8" />
+              <span>{game.time || '14:30'}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 2. Viewport 3D do MapLibre GL */}
       <div className="gps-map-viewport">
@@ -959,7 +961,7 @@ export default function GpsView({ data }) {
       </div>
 
       {/* 3. Card Flutuante de Manobra Superior (Estilo Imagem 2 / Waze) */}
-      <div className="gps-maneuver-card gps-automotive-banner">
+      <div className={`gps-maneuver-card gps-automotive-banner ${isEmbedded ? 'embedded-nav-banner' : ''}`}>
         <div className="maneuver-main-side">
           <div className="maneuver-icon-box">
             {renderManeuverIcon(activeManeuver.iconName, activeManeuver.color)}
@@ -1004,28 +1006,30 @@ export default function GpsView({ data }) {
       )}
 
       {/* 5. Alerta Visual Silencioso de Velocidade Excedida */}
-      {isOverSpeed && !approachingRadar && (
+      {isOverSpeed && !approachingRadar && !isEmbedded && (
         <div className="visual-speeding-warning-pill">
           <ShieldAlert size={18} color="#ff1744" />
           <span>VELOCIDADE ACIMA DO LIMITE ({speedLimit} KM/H)</span>
         </div>
       )}
 
-      {/* 6. Placa de Velocidade no Rodapé */}
-      <div className="gps-floating-speed">
-        <div className={`speed-limit-badge ${isOverSpeed ? 'over-speed' : ''}`} title="Limite da Via">
-          {speedLimit}
+      {/* 6. Placa de Velocidade no Rodapé (oculto no cluster central pois já tem velocímetro gigante) */}
+      {!isEmbedded && (
+        <div className="gps-floating-speed">
+          <div className={`speed-limit-badge ${isOverSpeed ? 'over-speed' : ''}`} title="Limite da Via">
+            {speedLimit}
+          </div>
+          <div className="gps-mini-speed-display" style={{ color: isOverSpeed ? 'var(--accent-red)' : '#ffffff' }}>
+            <span>{Math.round(speed)}</span>
+            <small>KM/H</small>
+          </div>
         </div>
-        <div className="gps-mini-speed-display" style={{ color: isOverSpeed ? 'var(--accent-red)' : '#ffffff' }}>
-          <span>{Math.round(speed)}</span>
-          <small>KM/H</small>
-        </div>
-      </div>
+      )}
 
       {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária */}
-      <div className="gps-bottom-destination-card">
+      <div className={`gps-bottom-destination-card ${isEmbedded ? 'embedded-bottom-card' : ''}`}>
         <div className="destination-badge-yellow">
-          <Flag size={16} color="#ffffff" />
+          <Flag size={14} color="#ffffff" />
           <span className="dest-text">
             {destinationInfo ? `${destinationInfo.name}: ` : (job?.cityDestination ? `${job.cityDestination}: ` : '')}
             {routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav.distance ? `${nav.distance} km` : '0 km')} • {nav.time || '--:--'}
@@ -1037,97 +1041,99 @@ export default function GpsView({ data }) {
             title="Enquadrar Rota Rodoviária Completa"
             onClick={fitRouteToBounds}
           >
-            <Route size={16} />
+            <Route size={15} />
           </button>
         </div>
       </div>
 
-      {/* 8. Coluna de Controles Flutuantes à Direita */}
-      <div className="gps-controls-column">
-        {/* Recalcular Rota Manualmente */}
-        <button 
-          id="btn-gps-recalculate"
-          className={`gps-pill-btn ${routeStatus === 'loading' ? 'btn-spinning' : ''}`}
-          onClick={recalculateRoute}
-          title="Recalcular Rota pelas Estradas"
-        >
-          <RefreshCw size={22} color="#00e5ff" />
-        </button>
+      {/* 8. Coluna de Controles Flutuantes à Direita (ocultos no modo embutido para visual limpo de cockpit) */}
+      {!isEmbedded && (
+        <div className="gps-controls-column">
+          {/* Recalcular Rota Manualmente */}
+          <button 
+            id="btn-gps-recalculate"
+            className={`gps-pill-btn ${routeStatus === 'loading' ? 'btn-spinning' : ''}`}
+            onClick={recalculateRoute}
+            title="Recalcular Rota pelas Estradas"
+          >
+            <RefreshCw size={22} color="#00e5ff" />
+          </button>
 
-        {/* Enquadrar Rota Completa */}
-        <button 
-          id="btn-gps-fit-route"
-          className="gps-pill-btn" 
-          onClick={fitRouteToBounds}
-          title="Ver Rota Completa até o Destino"
-        >
-          <Route size={22} color="#facc15" />
-        </button>
+          {/* Enquadrar Rota Completa */}
+          <button 
+            id="btn-gps-fit-route"
+            className="gps-pill-btn" 
+            onClick={fitRouteToBounds}
+            title="Ver Rota Completa até o Destino"
+          >
+            <Route size={22} color="#facc15" />
+          </button>
 
-        {/* Alternar Modo 3D vs 2D */}
-        <button 
-          id="btn-gps-navmode"
-          className={`gps-pill-btn ${navMode === 'heading-up' ? 'active-cyan' : ''}`} 
-          onClick={toggleNavMode}
-          title={navMode === 'heading-up' ? "Modo 3D Ativo (Clique para 2D)" : "Modo 2D Ativo (Clique para 3D)"}
-        >
-          <Layers size={22} />
-        </button>
+          {/* Alternar Modo 3D vs 2D */}
+          <button 
+            id="btn-gps-navmode"
+            className={`gps-pill-btn ${navMode === 'heading-up' ? 'active-cyan' : ''}`} 
+            onClick={toggleNavMode}
+            title={navMode === 'heading-up' ? "Modo 3D Ativo (Clique para 2D)" : "Modo 2D Ativo (Clique para 3D)"}
+          >
+            <Layers size={22} />
+          </button>
 
-        {/* Travar Câmera no Caminhão */}
-        <button 
-          id="btn-gps-recenter"
-          className={`gps-pill-btn ${followTruck ? 'active-cyan' : ''}`}
-          onClick={() => {
-            setFollowTruck(true);
-            if (mapInstanceRef.current && currentPosRef.current) {
-              mapInstanceRef.current.easeTo({
-                center: currentPosRef.current,
-                bearing: navMode === 'heading-up' ? currentHeadingRef.current : 0,
-                pitch: navMode === 'heading-up' ? 58 : 0,
-                duration: 400,
-              });
-            }
-          }}
-          title={followTruck ? "Câmera travada no caminhão" : "Travar câmera no caminhão"}
-        >
-          <Crosshair size={22} />
-        </button>
+          {/* Travar Câmera no Caminhão */}
+          <button 
+            id="btn-gps-recenter"
+            className={`gps-pill-btn ${followTruck ? 'active-cyan' : ''}`}
+            onClick={() => {
+              setFollowTruck(true);
+              if (mapInstanceRef.current && currentPosRef.current) {
+                mapInstanceRef.current.easeTo({
+                  center: currentPosRef.current,
+                  bearing: navMode === 'heading-up' ? currentHeadingRef.current : 0,
+                  pitch: navMode === 'heading-up' ? 58 : 0,
+                  duration: 400,
+                });
+              }
+            }}
+            title={followTruck ? "Câmera travada no caminhão" : "Travar câmera no caminhão"}
+          >
+            <Crosshair size={22} />
+          </button>
 
-        {/* Voz do GPS */}
-        <button 
-          id="btn-gps-voice"
-          className={`gps-pill-btn ${voiceEnabled ? 'active-cyan' : ''}`}
-          onClick={() => {
-            const next = !voiceEnabled;
-            setVoiceEnabled(next);
-            if (next) speakVoice('Avisos de voz ativados.');
-          }}
-          title={voiceEnabled ? "Silenciar avisos de voz" : "Ativar avisos de voz"}
-        >
-          {voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
-        </button>
+          {/* Voz do GPS */}
+          <button 
+            id="btn-gps-voice"
+            className={`gps-pill-btn ${voiceEnabled ? 'active-cyan' : ''}`}
+            onClick={() => {
+              const next = !voiceEnabled;
+              setVoiceEnabled(next);
+              if (next) speakVoice('Avisos de voz ativados.');
+            }}
+            title={voiceEnabled ? "Silenciar avisos de voz" : "Ativar avisos de voz"}
+          >
+            {voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
+          </button>
 
-        {/* Zoom In */}
-        <button 
-          id="btn-gps-zoomin"
-          className="gps-pill-btn" 
-          onClick={() => mapInstanceRef.current?.zoomIn()} 
-          title="Aproximar Zoom"
-        >
-          <ZoomIn size={22} />
-        </button>
+          {/* Zoom In */}
+          <button 
+            id="btn-gps-zoomin"
+            className="gps-pill-btn" 
+            onClick={() => mapInstanceRef.current?.zoomIn()} 
+            title="Aproximar Zoom"
+          >
+            <ZoomIn size={22} />
+          </button>
 
-        {/* Zoom Out */}
-        <button 
-          id="btn-gps-zoomout"
-          className="gps-pill-btn" 
-          onClick={() => mapInstanceRef.current?.zoomOut()} 
-          title="Afastar Zoom"
-        >
-          <ZoomOut size={22} />
-        </button>
-      </div>
+          {/* Zoom Out */}
+          <button 
+            id="btn-gps-zoomout"
+            className="gps-pill-btn" 
+            onClick={() => mapInstanceRef.current?.zoomOut()} 
+            title="Afastar Zoom"
+          >
+            <ZoomOut size={22} />
+          </button>
+        </div>
+      )}
 
       {/* 9. Modal Informativo e Honesto de Wake Lock (Tela Ativa) */}
       {isWakeModalOpen && (

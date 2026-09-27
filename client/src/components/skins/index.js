@@ -32,10 +32,10 @@ export const CLUSTER_SKINS = [
   {
     id: 'model2_route_nav',
     number: 2,
-    name: '2. Route Navigator (Foto 2)',
-    category: 'Foto',
-    description: 'Ponteiros analógicos vermelhos com mini-mapa esquemático de rota no centro.',
-    accentColor: '#ff4d4f',
+    name: '2. Route Navigator Pro (Cockpit + GPS)',
+    category: 'Profissional',
+    description: 'Cockpit digital integrado de caminhão pesado com velocímetro, tacômetro diesel e GPS oficial do ETS2 em tempo real entre os dois mostradores.',
+    accentColor: '#00e5ff',
     Component: SkinRouteNavigator,
   },
   {

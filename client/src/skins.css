@@ -315,26 +315,31 @@
 }
 
 /* ==========================================================================
-   MODELO 2: ROUTE NAVIGATOR (FOTO 2)
+   MODELO 2: ROUTE NAVIGATOR PRO (COCKPIT DIGITAL COM GPS CENTRAL)
    ========================================================================== */
 .skin-route-container {
   width: 100%;
-  max-width: 920px;
+  max-width: 1240px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .skin-route-housing {
-  background: #0b1120;
-  border: 3px solid #1e293b;
-  border-radius: 80px;
-  padding: 20px 24px;
+  background: radial-gradient(circle at 50% 20%, #111a2e 0%, #080d18 65%, #03060c 100%);
+  border: 4px solid #1e293b;
+  border-radius: 40px;
+  padding: 64px 20px 20px 20px;
   position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  flex-direction: column;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
 }
 
+/* Barra Superior de Luzes-Espia */
 .route-telltale-bar {
   position: absolute;
   top: 14px;
@@ -342,152 +347,450 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: #030712;
-  padding: 4px 16px;
+  gap: 16px;
+  background: #040812;
+  padding: 6px 24px;
   border-radius: 999px;
   border: 1px solid #1e293b;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 20;
 }
 
 .route-telltale-icon {
-  color: #334155;
+  color: #475569;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.telltale-active-green { color: #22c55e !important; filter: drop-shadow(0 0 6px #22c55e); }
-.telltale-active-cyan { color: #00e5ff !important; filter: drop-shadow(0 0 6px #00e5ff); }
-.telltale-active-blue { color: #3b82f6 !important; filter: drop-shadow(0 0 6px #3b82f6); }
-.telltale-active-amber { color: #f59e0b !important; filter: drop-shadow(0 0 6px #f59e0b); }
-.telltale-active-red { color: #ef4444 !important; filter: drop-shadow(0 0 6px #ef4444); }
+.telltale-active-green { color: #10b981 !important; filter: drop-shadow(0 0 8px #10b981); }
+.telltale-active-cyan { color: #00e5ff !important; filter: drop-shadow(0 0 8px #00e5ff); }
+.telltale-active-blue { color: #3b82f6 !important; filter: drop-shadow(0 0 8px #3b82f6); }
+.telltale-active-amber { color: #f59e0b !important; filter: drop-shadow(0 0 8px #f59e0b); }
+.telltale-active-red { color: #ef4444 !important; filter: drop-shadow(0 0 8px #ef4444); }
 
-.route-dial {
-  position: relative;
-  width: 300px;
-  height: 300px;
-  max-width: 40vw;
-  max-height: 40vw;
+/* Linha Principal dos Mostradores e do GPS Central */
+.route-main-gauges-row {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Mostradores Analógicos/Digitais */
+.route-dial-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  flex: 0 0 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.8));
 }
 
 .route-dial-svg {
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-.route-dial-center {
+.route-dial-center-content {
   position: absolute;
-  top: 52%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .route-digital-speed {
   font-family: var(--font-digital);
-  font-size: 3.4rem;
+  font-size: 3.2rem;
   font-weight: 800;
   line-height: 1;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+  letter-spacing: -1px;
 }
 
-.route-unit {
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-  color: #94a3b8;
-  font-weight: 700;
-}
-
-.route-rpm-color {
+.route-rpm-val {
+  font-size: 2.8rem;
   color: #ffffff;
 }
 
-.route-bottom-icon {
-  position: absolute;
-  bottom: 42px;
-  left: 50%;
-  transform: translateX(-50%);
+.route-digital-unit {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.route-center-nav-display {
+/* Placa Redonda Européia de Limite de Velocidade */
+.route-speed-limit-badge {
+  position: absolute;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid #dc2626;
+  color: #111827;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 0.92rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  z-index: 6;
 }
 
-.route-minimap-card {
-  width: 130px;
-  height: 160px;
-  background: #030712;
-  border: 1.5px solid #1e293b;
-  border-radius: 14px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
+.limit-overspeed-pulse {
+  animation: limitPulse 0.8s infinite alternate ease-in-out;
+  box-shadow: 0 0 16px #ef4444;
 }
 
-.minimap-grid-lines {
+@keyframes limitPulse {
+  0% { transform: translateX(-50%) scale(1); filter: drop-shadow(0 0 4px #ef4444); }
+  100% { transform: translateX(-50%) scale(1.15); filter: drop-shadow(0 0 14px #ff1744); }
+}
+
+/* Rótulo de escala x100 r/min no tacômetro */
+.route-rpm-scale-label {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.grid-h-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.grid-v-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.minimap-route-svg {
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-}
-
-.minimap-target-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #00e5ff;
-  z-index: 3;
-}
-
-.route-bottom-datetime-pill {
-  position: absolute;
-  bottom: 14px;
+  top: 76px;
   left: 50%;
   transform: translateX(-50%);
-  background: #030712;
-  border: 1px solid #1e293b;
-  color: #38bdf8;
-  font-family: var(--font-digital);
-  font-size: 0.85rem;
+  color: #64748b;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 999px;
   letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Indicadores Secundários nos Arcos Inferiores (Combustível e Temperatura) */
+.route-sub-gauge-info {
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-digital);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(3, 7, 18, 0.75);
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.route-sub-gauge-info small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.low-alert-text, .hot-alert-text {
+  color: #ef4444 !important;
+  font-weight: 800;
+  text-shadow: 0 0 8px #ef4444;
+}
+
+/* ==========================================================================
+   TELA CENTRAL: O MAPA DE NAVEGAÇÃO INTEGRADO AO COCKPIT
+   ========================================================================== */
+.route-center-nav-display {
+  flex: 1 1 480px;
+  min-width: 380px;
+  max-width: 540px;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-cockpit-screen {
+  width: 100%;
+  height: 100%;
+  background: #050912;
+  border: 3px solid #1e293b;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.8),
+    inset 0 0 20px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Barra Superior da Tela Central (Marcha e Piloto Automático) */
+.route-screen-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(180deg, rgba(6, 11, 20, 0.95) 0%, rgba(6, 11, 20, 0.7) 80%, transparent 100%);
+  backdrop-filter: blur(8px);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.route-gear-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.gear-sub {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.gear-main {
+  font-family: var(--font-digital);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #00e5ff;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+  letter-spacing: 1px;
+}
+
+.route-cruise-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #1e293b;
+  padding: 2px 10px;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cruise-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #475569;
+}
+
+.active-cruise {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(6, 78, 59, 0.4);
+}
+
+.active-cruise .cruise-led {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.active-cruise .cruise-val {
+  color: #34d399;
+}
+
+.route-retarder-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* Container do Mapa */
+.route-embedded-map-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Reflexo de Vidro no Topo da Tela */
+.route-screen-glass-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  z-index: 12;
+}
+
+/* ==========================================================================
+   BARRA INFERIOR DE COMPUTADOR DE BORDO (TRIP COMPUTER)
+   ========================================================================== */
+.route-bottom-trip-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #050a14;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 8px 16px;
+  margin-top: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.route-trip-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.trip-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.trip-value {
+  font-family: var(--font-digital);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.trip-alert-item .trip-value {
+  color: #ef4444 !important;
+  text-shadow: 0 0 6px #ef4444;
+}
+
+/* ==========================================================================
+   AJUSTES ESPECÍFICOS PARA O GPSVIEW EMBUTIDO NO COCKPIT
+   ========================================================================== */
+.gps-embedded-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit;
+  overflow: hidden;
+  background: #050a14;
+}
+
+.gps-embedded-container .gps-map-viewport {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.gps-embedded-container .maplibre-container-root {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Banner de manobra superior compacto e elegante dentro do cockpit */
+.gps-embedded-container .embedded-nav-banner {
+  top: 48px !important;
+  left: 10px !important;
+  right: 10px !important;
+  max-width: none !important;
+  padding: 6px 12px !important;
+  background: rgba(10, 16, 26, 0.88) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(0, 229, 255, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+  z-index: 10 !important;
+}
+
+.gps-embedded-container .embedded-nav-banner .maneuver-icon-box {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+}
+
+.gps-embedded-container .embedded-nav-banner .maneuver-icon-box svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.gps-embedded-container .embedded-nav-banner .maneuver-dist-highlight {
+  font-size: 1.15rem !important;
+}
+
+.gps-embedded-container .embedded-nav-banner .maneuver-instruction {
+  font-size: 0.82rem !important;
+  line-height: 1.2 !important;
+}
+
+.gps-embedded-container .embedded-nav-banner .maneuver-subtext {
+  font-size: 0.7rem !important;
+}
+
+/* Card inferior de destino e ETA embutido */
+.gps-embedded-container .embedded-bottom-card {
+  bottom: 8px !important;
+  left: 10px !important;
+  right: 10px !important;
+  transform: none !important;
+  max-width: none !important;
+  z-index: 10 !important;
+}
+
+.gps-embedded-container .destination-badge-yellow {
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  background: rgba(11, 19, 31, 0.9) !important;
+  border: 1px solid rgba(245, 166, 35, 0.4) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Responsividade para telas menores / tablets verticais */
+@media (max-width: 1024px) {
+  .route-main-gauges-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .route-center-nav-display {
+    order: -1;
+    width: 100%;
+    max-width: 600px;
+    height: 320px;
+  }
+  .route-dial-wrapper {
+    width: 280px;
+    height: 280px;
+    flex: 0 0 280px;
+  }
+  .route-bottom-trip-bar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 }
 
 /* ==========================================================================
