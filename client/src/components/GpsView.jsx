@@ -48,6 +48,14 @@ function renderManeuverIcon(iconName, color = '#ffffff') {
   }
 }
 
+// Função auxiliar para cálculo métrico real entre dois pontos Geo
+function calcDistMeters(p1, p2) {
+  if (!p1 || !p2) return 0;
+  const dx = (p1[0] - p2[0]) * 72150.0;
+  const dy = (p1[1] - p2[1]) * 111000.0;
+  return Math.hypot(dx, dy);
+}
+
 export default function GpsView({ data, isEmbedded = false }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -106,6 +114,137 @@ export default function GpsView({ data, isEmbedded = false }) {
     canToggleStage,
     toggleStage,
   } = useRoadRoute(placement, job, true);
+
+  // 1.1 Cálculo Dinâmico da Próxima Curva e Distância em Tempo Real (Turn-by-Turn estilo Waze/Google Maps)
+  const activeManeuver = useMemo(() => {
+    if (routeStatus === 'loading') {
+      return {
+        type: 'loading',
+        iconName: 'RotateCcw',
+        instruction: 'Calculando rota pelas rodovias...',
+        turnText: 'Calculando...',
+        subText: destinationInfo?.name ? `${destinationInfo.taskTitle || 'Destino'}: ${destinationInfo.name}` : 'Consultando malha viária',
+        distanceText: '...',
+        distanceMeters: 0,
+        color: '#38bdf8',
+      };
+    }
+
+    if (!job?.onJob || routeStatus === 'idle') {
+      return {
+        type: 'straight',
+        iconName: 'ArrowUp',
+        instruction: 'Siga pelas rodovias',
+        turnText: 'Siga em frente',
+        subText: 'Navegação rodoviária livre',
+        distanceText: '--',
+        distanceMeters: 0,
+        color: '#00e5ff',
+      };
+    }
+
+    if (routeStatus === 'error') {
+      return {
+        type: 'error',
+        iconName: 'ShieldAlert',
+        instruction: 'Rota rodoviária indisponível',
+        turnText: 'Sem rota',
+        subText: routeError || 'Verifique se a rodovia está mapeada',
+        distanceText: nav?.distance ? `${nav.distance} km` : 'Sem rota',
+        distanceMeters: 0,
+        color: '#ef4444',
+      };
+    }
+
+    const coords = routeGeoJson?.geometry?.coordinates;
+    const truckGeo = convertEts2ToGeo(placement.x, placement.z);
+
+    if (!coords || coords.length === 0 || !maneuvers || maneuvers.length === 0) {
+      return {
+        type: 'straight',
+        iconName: 'ArrowUp',
+        instruction: destinationInfo ? `Siga para ${destinationInfo.name}` : 'Siga pelas rodovias',
+        turnText: 'Siga em frente',
+        subText: destinationInfo?.description || destinationInfo?.name || 'Navegação rodoviária',
+        distanceText: routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav?.distance ? `${nav.distance} km` : '--'),
+        distanceMeters: 0,
+        color: '#00e5ff',
+      };
+    }
+
+    // 1. Encontra o índice da coordenada mais próxima do caminhão ao longo da rota
+    let closestIdx = 0;
+    let minD = Infinity;
+    for (let i = 0; i < coords.length; i++) {
+      const d = calcDistMeters(truckGeo, coords[i]);
+      if (d < minD) {
+        minD = d;
+        closestIdx = i;
+      }
+    }
+
+    // 2. Localiza a próxima manobra que ainda está à frente do caminhão
+    let nextM = null;
+    let mIdx = -1;
+    for (let i = 0; i < maneuvers.length; i++) {
+      const m = maneuvers[i];
+      const targetIdx = typeof m.coord_index === 'number' ? m.coord_index : 0;
+      // Se a manobra está à frente (ou estamos a menos de 25m do ápice mas ainda não passamos o índice + 2)
+      if (targetIdx > closestIdx + 1 || (targetIdx >= closestIdx && m.type === 'destination')) {
+        nextM = m;
+        mIdx = i;
+        break;
+      }
+    }
+
+    if (!nextM) {
+      nextM = maneuvers[maneuvers.length - 1]; // Destino final
+    }
+
+    // 3. Calcula a distância real em metros percorrendo os nós da estrada
+    const targetIdx = typeof nextM.coord_index === 'number' ? nextM.coord_index : coords.length - 1;
+    let distAlongRoute = calcDistMeters(truckGeo, coords[closestIdx]);
+    const startStep = Math.min(closestIdx, targetIdx);
+    const endStep = Math.max(closestIdx, targetIdx);
+    for (let i = startStep; i < endStep && i < coords.length - 1; i++) {
+      distAlongRoute += calcDistMeters(coords[i], coords[i + 1]);
+    }
+
+    // 4. Formatação precisa da distância (ex: 350 m ou 1.2 km)
+    let distanceText = '';
+    if (distAlongRoute < 950) {
+      const roundedMeters = distAlongRoute > 100 
+        ? Math.round(distAlongRoute / 20) * 20 
+        : Math.max(10, Math.round(distAlongRoute / 10) * 10);
+      distanceText = `${roundedMeters} m`;
+    } else {
+      distanceText = `${(distAlongRoute / 1000).toFixed(1)} km`;
+    }
+
+    let iconName = 'ArrowUp';
+    let color = '#10b981';
+
+    if (nextM.type === 'right') { iconName = 'ArrowRight'; color = '#38bdf8'; }
+    else if (nextM.type === 'left') { iconName = 'ArrowLeft'; color = '#38bdf8'; }
+    else if (nextM.type === 'slight-right') { iconName = 'ArrowUpRight'; color = '#00e5ff'; }
+    else if (nextM.type === 'slight-left') { iconName = 'ArrowUpLeft'; color = '#00e5ff'; }
+    else if (nextM.type === 'sharp-right') { iconName = 'CornerDownRight'; color = '#f59e0b'; }
+    else if (nextM.type === 'sharp-left') { iconName = 'CornerDownLeft'; color = '#f59e0b'; }
+    else if (nextM.type === 'destination') { iconName = 'Flag'; color = '#10b981'; }
+
+    return {
+      type: nextM.type,
+      iconName,
+      instruction: nextM.turn_text || nextM.instruction || 'Siga pela rodovia',
+      turnText: nextM.turn_text || nextM.instruction,
+      subText: destinationInfo?.description || destinationInfo?.name || 'Siga pela rodovia',
+      distanceText,
+      distanceMeters: Math.round(distAlongRoute),
+      coord_index: nextM.coord_index,
+      point: nextM.point,
+      color,
+    };
+  }, [routeStatus, routeError, routeGeoJson, maneuvers, destinationInfo, routeStats, nav?.distance, placement.x, placement.z]);
 
   // 2. Inscrição unificada no WakeLockManager
   useEffect(() => {
@@ -1030,145 +1169,6 @@ export default function GpsView({ data, isEmbedded = false }) {
       speakVoice('Modo norte fixo 2D ativado.');
     }
   };
-
-  // Função auxiliar para cálculo métrico real entre dois pontos Geo
-  const calcDistMeters = useCallback((p1, p2) => {
-    if (!p1 || !p2) return 0;
-    const dx = (p1[0] - p2[0]) * 72150.0;
-    const dy = (p1[1] - p2[1]) * 111000.0;
-    return Math.hypot(dx, dy);
-  }, []);
-
-  // 10. Cálculo Dinâmico da Próxima Curva e Distância em Tempo Real (Turn-by-Turn estilo Waze/Google Maps)
-  const activeManeuver = useMemo(() => {
-    if (routeStatus === 'loading') {
-      return {
-        type: 'loading',
-        iconName: 'RotateCcw',
-        instruction: 'Calculando rota pelas rodovias...',
-        turnText: 'Calculando...',
-        subText: destinationInfo?.name ? `${destinationInfo.taskTitle || 'Destino'}: ${destinationInfo.name}` : 'Consultando malha viária',
-        distanceText: '...',
-        distanceMeters: 0,
-        color: '#38bdf8',
-      };
-    }
-
-    if (!job?.onJob || routeStatus === 'idle') {
-      return {
-        type: 'straight',
-        iconName: 'ArrowUp',
-        instruction: 'Siga pelas rodovias',
-        turnText: 'Siga em frente',
-        subText: 'Navegação rodoviária livre',
-        distanceText: '--',
-        distanceMeters: 0,
-        color: '#00e5ff',
-      };
-    }
-
-    if (routeStatus === 'error') {
-      return {
-        type: 'error',
-        iconName: 'ShieldAlert',
-        instruction: 'Rota rodoviária indisponível',
-        turnText: 'Sem rota',
-        subText: routeError || 'Verifique se a rodovia está mapeada',
-        distanceText: nav?.distance ? `${nav.distance} km` : 'Sem rota',
-        distanceMeters: 0,
-        color: '#ef4444',
-      };
-    }
-
-    const coords = routeGeoJson?.geometry?.coordinates;
-    const truckGeo = convertEts2ToGeo(placement.x, placement.z);
-
-    if (!coords || coords.length === 0 || !maneuvers || maneuvers.length === 0) {
-      return {
-        type: 'straight',
-        iconName: 'ArrowUp',
-        instruction: destinationInfo ? `Siga para ${destinationInfo.name}` : 'Siga pelas rodovias',
-        turnText: 'Siga em frente',
-        subText: destinationInfo?.description || destinationInfo?.name || 'Navegação rodoviária',
-        distanceText: routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav?.distance ? `${nav.distance} km` : '--'),
-        distanceMeters: 0,
-        color: '#00e5ff',
-      };
-    }
-
-    // 1. Encontra o índice da coordenada mais próxima do caminhão ao longo da rota
-    let closestIdx = 0;
-    let minD = Infinity;
-    for (let i = 0; i < coords.length; i++) {
-      const d = calcDistMeters(truckGeo, coords[i]);
-      if (d < minD) {
-        minD = d;
-        closestIdx = i;
-      }
-    }
-
-    // 2. Localiza a próxima manobra que ainda está à frente do caminhão
-    let nextM = null;
-    let mIdx = -1;
-    for (let i = 0; i < maneuvers.length; i++) {
-      const m = maneuvers[i];
-      const targetIdx = typeof m.coord_index === 'number' ? m.coord_index : 0;
-      // Se a manobra está à frente (ou estamos a menos de 25m do ápice mas ainda não passamos o índice + 2)
-      if (targetIdx > closestIdx + 1 || (targetIdx >= closestIdx && m.type === 'destination')) {
-        nextM = m;
-        mIdx = i;
-        break;
-      }
-    }
-
-    if (!nextM) {
-      nextM = maneuvers[maneuvers.length - 1]; // Destino final
-    }
-
-    // 3. Calcula a distância real em metros percorrendo os nós da estrada
-    const targetIdx = typeof nextM.coord_index === 'number' ? nextM.coord_index : coords.length - 1;
-    let distAlongRoute = calcDistMeters(truckGeo, coords[closestIdx]);
-    const startStep = Math.min(closestIdx, targetIdx);
-    const endStep = Math.max(closestIdx, targetIdx);
-    for (let i = startStep; i < endStep && i < coords.length - 1; i++) {
-      distAlongRoute += calcDistMeters(coords[i], coords[i + 1]);
-    }
-
-    // 4. Formatação precisa da distância (ex: 350 m ou 1.2 km)
-    let distanceText = '';
-    if (distAlongRoute < 950) {
-      const roundedMeters = distAlongRoute > 100 
-        ? Math.round(distAlongRoute / 20) * 20 
-        : Math.max(10, Math.round(distAlongRoute / 10) * 10);
-      distanceText = `${roundedMeters} m`;
-    } else {
-      distanceText = `${(distAlongRoute / 1000).toFixed(1)} km`;
-    }
-
-    let iconName = 'ArrowUp';
-    let color = '#10b981';
-
-    if (nextM.type === 'right') { iconName = 'ArrowRight'; color = '#38bdf8'; }
-    else if (nextM.type === 'left') { iconName = 'ArrowLeft'; color = '#38bdf8'; }
-    else if (nextM.type === 'slight-right') { iconName = 'ArrowUpRight'; color = '#00e5ff'; }
-    else if (nextM.type === 'slight-left') { iconName = 'ArrowUpLeft'; color = '#00e5ff'; }
-    else if (nextM.type === 'sharp-right') { iconName = 'CornerDownRight'; color = '#f59e0b'; }
-    else if (nextM.type === 'sharp-left') { iconName = 'CornerDownLeft'; color = '#f59e0b'; }
-    else if (nextM.type === 'destination') { iconName = 'Flag'; color = '#10b981'; }
-
-    return {
-      type: nextM.type,
-      iconName,
-      instruction: nextM.turn_text || nextM.instruction || 'Siga pela rodovia',
-      turnText: nextM.turn_text || nextM.instruction,
-      subText: destinationInfo?.description || destinationInfo?.name || 'Siga pela rodovia',
-      distanceText,
-      distanceMeters: Math.round(distAlongRoute),
-      coord_index: nextM.coord_index,
-      point: nextM.point,
-      color,
-    };
-  }, [routeStatus, routeError, routeGeoJson, maneuvers, destinationInfo, routeStats, nav?.distance, placement.x, placement.z, calcDistMeters]);
 
   // 11. Gatilhos de Voz em Português estilo Waze / Google Maps
   useEffect(() => {
