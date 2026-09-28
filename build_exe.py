@@ -30,11 +30,15 @@ def main():
     # 2. Executar o PyInstaller
     print("\n[2/3] Empacotando GUI Python, Servidor e Frontend com PyInstaller...")
     
+    icon_path = os.path.join(SERVER_DIR, "assets", "icon.ico")
+    assets_dir = os.path.join(SERVER_DIR, "assets")
     add_data_flag = f"--add-data={DIST_CLIENT};client/dist"
+    add_assets_flag = f"--add-data={assets_dir};server/assets"
     
     pyinstaller_cmd = [
         sys.executable, "-m", "PyInstaller",
-        "--name=ETS2_Telemetria_Pro",
+        "--name=TruckPilot_Pro",
+        f"--icon={icon_path}",
         "--onedir",
         "--windowed", # Abre a janela gráfica sem console preto
         "--noconfirm",
@@ -42,6 +46,7 @@ def main():
         "--collect-all", "truck_telemetry",
         "--hidden-import", "pydirectinput",
         add_data_flag,
+        add_assets_flag,
         "--paths", SERVER_DIR,
         os.path.join(SERVER_DIR, "gui.py")
     ]
@@ -53,7 +58,7 @@ def main():
         sys.exit(1)
 
     print("\n[3/3] Compilação concluída com sucesso!")
-    print(f"O executável foi gerado na pasta: {os.path.join(ROOT_DIR, 'dist', 'ETS2_Telemetria_Pro')}")
+    print(f"O executável foi gerado na pasta: {os.path.join(ROOT_DIR, 'dist', 'TruckPilot_Pro')}")
     print("Você pode distribuir essa pasta ou gerar um instalador com o Inno Setup!")
     print("=" * 60)
 

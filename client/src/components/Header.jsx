@@ -1,5 +1,6 @@
 import React from 'react';
-import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode } from 'lucide-react';
+import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode, Download } from 'lucide-react';
+import { usePwaInstall } from '../utils/usePwaInstall';
 
 export default function Header({ 
   viewMode, 
@@ -9,12 +10,17 @@ export default function Header({
   isFullscreen, 
   toggleFullscreen 
 }) {
+  const { isInstallable, isInstalled, installApp } = usePwaInstall();
+
   return (
     <header className="app-header">
       <div className="brand-section">
-        <h1 className="brand-title">
-          ETS2 <span>TELEMETRIA</span>
-        </h1>
+        <div className="brand-logo-wrap">
+          <img src="/icon-192.png" alt="TruckPilot Pro Logo" className="brand-logo-img" />
+          <h1 className="brand-title">
+            TRUCKPILOT <span>PRO</span>
+          </h1>
+        </div>
         
         <div className={`badge-status ${connectionStatus}`}>
           <div className="pulse-dot"></div>
@@ -59,6 +65,19 @@ export default function Header({
 
       {/* Ações Rápidas */}
       <div className="header-actions">
+        {/* Botão de Instalar App (PWA) */}
+        {isInstallable && !isInstalled && (
+          <button 
+            id="btn-install-pwa"
+            className="pwa-install-pill-btn"
+            onClick={installApp}
+            title="Instalar TruckPilot Pro como aplicativo no celular, tablet ou PC"
+          >
+            <Download size={16} />
+            <span className="pwa-btn-label">Instalar App</span>
+          </button>
+        )}
+
         <button 
           id="btn-open-qr"
           className="icon-btn" 

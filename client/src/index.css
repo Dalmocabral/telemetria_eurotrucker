@@ -77,6 +77,21 @@ body {
   gap: 10px;
 }
 
+.brand-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+}
+
 .brand-title {
   font-family: var(--font-heading);
   font-size: 1.25rem;
@@ -86,10 +101,50 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin: 0;
 }
 
 .brand-title span {
   color: var(--accent-cyan);
+}
+
+/* Botão de Instalação PWA */
+.pwa-install-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2) 0%, rgba(14, 165, 233, 0.25) 100%);
+  border: 1.5px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+  animation: pulse 2.5s infinite;
+}
+
+.pwa-install-pill-btn:hover {
+  background: var(--accent-cyan);
+  color: #060911;
+  box-shadow: 0 0 20px var(--accent-cyan-glow);
+  transform: translateY(-1px);
+}
+
+.pwa-install-pill-btn:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 600px) {
+  .pwa-btn-label {
+    display: none;
+  }
+  .pwa-install-pill-btn {
+    padding: 8px;
+  }
 }
 
 .badge-status {

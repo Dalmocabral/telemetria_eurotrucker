@@ -35,6 +35,14 @@ class TelemetryServerApp(ctk.CTk):
         self.minsize(800, 540)
         self.configure(fg_color="#0b0f19")
 
+        # Configura o ícone oficial do TruckPilot Pro na janela e barra de tarefas
+        icon_path = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
+        if os.path.exists(icon_path):
+            try:
+                self.iconbitmap(icon_path)
+            except Exception as e:
+                print(f"[GUI] Aviso ao carregar iconbitmap: {e}")
+
         self.server_thread = None
         self.server_instance = None
         self.is_running = True
