@@ -254,6 +254,22 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.icon-btn.active-sun {
+  background: rgba(255, 179, 0, 0.15);
+  border-color: rgba(255, 179, 0, 0.5);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.3);
+}
+
+.pulse-sun {
+  filter: drop-shadow(0 0 6px rgba(255, 179, 0, 0.8));
+  animation: pulseSun 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseSun {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.85; }
+}
+
 /* Área de Conteúdo */
 .content-area {
   flex: 1;

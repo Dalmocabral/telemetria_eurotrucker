@@ -191,38 +191,79 @@ class WakeLockManager {
     if (typeof document === 'undefined') return false;
 
     try {
+      // 1. Cria um Canvas dinâmico de 16x16 com animação contínua (1 FPS)
+      // O Android OS reconhece streams ativos do captureStream como reprodução de vídeo real,
+      // engajando o hardware FLAG_KEEP_SCREEN_ON para NUNCA apagar a tela!
+      if (!this.canvasElement) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        this.canvasElement = canvas;
+        const ctx = canvas.getContext('2d');
+        let tick = 0;
+        this.canvasInterval = setInterval(() => {
+          tick = (tick + 1) % 2;
+          ctx.fillStyle = tick === 0 ? '#05070a' : '#070a10';
+          ctx.fillRect(0, 0, 16, 16);
+        }, 1000);
+      }
+
       if (!this.videoElement) {
         const video = document.createElement('video');
-        video.setAttribute('title', 'TruckPilot NoSleep Auxiliary Media');
+        video.setAttribute('title', 'TruckPilot NoSleep Keep-Screen-On');
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('loop', '');
         video.setAttribute('muted', '');
         video.muted = true;
         video.volume = 0;
+        // Posicionado visível na quina da tela (1x1px) para o Chrome Android NÃO pausar por economia de energia
         video.style.position = 'fixed';
-        video.style.left = '-9999px';
-        video.style.top = '-9999px';
+        video.style.bottom = '0px';
+        video.style.right = '0px';
         video.style.width = '1px';
         video.style.height = '1px';
         video.style.opacity = '0.01';
         video.style.pointerEvents = 'none';
-        video.src = FALLBACK_VIDEO_B64;
+        video.style.zIndex = '-9999';
+
+        // Tenta usar o Canvas Stream ativo nativo
+        if (this.canvasElement && typeof this.canvasElement.captureStream === 'function') {
+          try {
+            video.srcObject = this.canvasElement.captureStream(2);
+          } catch (err) {
+            video.src = FALLBACK_VIDEO_B64;
+          }
+        } else {
+          video.src = FALLBACK_VIDEO_B64;
+        }
+
+        // Se o Android tentar pausar, reinicia imediatamente
+        video.addEventListener('pause', () => {
+          if (this.userWantsActive && this.state === WAKE_LOCK_STATES.ACTIVE_MEDIA) {
+            video.play().catch(() => {});
+          }
+        });
+
         document.body.appendChild(video);
         this.videoElement = video;
       }
 
       await this.videoElement.play();
-      // Confirmação real: só reporta sucesso se o vídeo realmente não estiver pausado
       return !this.videoElement.paused;
     } catch (e) {
-      // Em navegadores móveis sem toque prévio, o autoplay pode ser bloqueado
       console.log('[WakeLockManager] Vídeo auxiliar aguardando toque do usuário:', e.message);
       return false;
     }
   }
 
   _cleanMediaFallback() {
+    if (this.canvasInterval) {
+      clearInterval(this.canvasInterval);
+      this.canvasInterval = null;
+    }
+    this.canvasElement = null;
+
     if (this.videoElement) {
       try {
         this.videoElement.pause();
@@ -284,8 +325,9 @@ class WakeLockManager {
         this.requestWakeLock(true);
       }
     };
-    window.addEventListener('click', onUserInteraction, { passive: true });
-    window.addEventListener('touchend', onUserInteraction, { passive: true });
+    ['click', 'touchstart', 'touchend', 'pointerdown'].forEach((evt) => {
+      window.addEventListener(evt, onUserInteraction, { passive: true });
+    });
   }
 }
 

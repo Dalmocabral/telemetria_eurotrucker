@@ -1,6 +1,7 @@
-import React from 'react';
-import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Gauge, MapPin, LayoutGrid, Maximize, Minimize, QrCode, Download, Sun } from 'lucide-react';
 import { usePwaInstall } from '../utils/usePwaInstall';
+import { wakeLockManager } from '../utils/wakeLock';
 
 export default function Header({ 
   viewMode, 
@@ -11,6 +12,13 @@ export default function Header({
   toggleFullscreen 
 }) {
   const { isInstallable, isInstalled, installApp } = usePwaInstall();
+  const [wakeLockInfo, setWakeLockInfo] = useState(() => wakeLockManager.getStateInfo());
+
+  useEffect(() => {
+    return wakeLockManager.subscribe((info) => {
+      setWakeLockInfo(info);
+    });
+  }, []);
 
   return (
     <header className="app-header">
@@ -77,6 +85,19 @@ export default function Header({
             <span className="pwa-btn-label">Instalar App</span>
           </button>
         )}
+
+        {/* Trava de Tela Sempre Ligada */}
+        <button
+          id="btn-wake-lock"
+          className={`icon-btn ${wakeLockInfo.isActive ? 'active-sun' : ''}`}
+          onClick={() => wakeLockManager.toggle(true)}
+          title={wakeLockInfo.isActive 
+            ? "☀️ Tela Sempre Ligada: ATIVA (o celular não vai escurecer nem apagar a tela!)" 
+            : "🌙 Tela Desprotegida (Toque aqui para travar a tela sempre acesa!)"}
+          style={wakeLockInfo.isActive ? { color: '#ffb300', borderColor: 'rgba(255, 179, 0, 0.5)' } : { opacity: 0.6 }}
+        >
+          <Sun size={20} className={wakeLockInfo.isActive ? 'pulse-sun' : ''} />
+        </button>
 
         <button 
           id="btn-open-qr"
