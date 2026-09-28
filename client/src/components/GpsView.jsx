@@ -119,18 +119,48 @@ export default function GpsView({ data, isEmbedded = false }) {
   const speakVoice = useCallback((text) => {
     if (!voiceEnabled || !window.speechSynthesis) return;
     try {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'pt-BR';
       utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
       const voices = window.speechSynthesis.getVoices();
-      const brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.startsWith('pt'));
+      const brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.startsWith('pt')) || voices.find(v => v.lang.includes('pt'));
       if (brVoice) utterance.voice = brVoice;
-      window.speechSynthesis.speak(utterance);
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.warn('Speech error:', err);
+        }
+      }, 25);
     } catch (e) {
       console.warn('Erro de voz:', e);
     }
   }, [voiceEnabled]);
+
+  // Desbloqueio de áudio em navegadores móveis (Chrome / Edge / Android)
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (window.speechSynthesis) {
+        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+        const silent = new SpeechSynthesisUtterance('');
+        window.speechSynthesis.speak(silent);
+      }
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
 
   // Enquadrar a rota rodoviária completa (incluindo rotas alternativas) até o destino
   const fitRouteToBounds = useCallback(() => {
@@ -177,7 +207,10 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
   }, [routeGeoJson, alternativeGeoJson, destinationInfo, speakVoice]);
 
-  // 4. Detecção em Tempo Real de Radares de Velocidade à Frente
+  // 4. Detecção em Tempo Real de Radares com Localização Exata e Status "Ultrapassado"
+  const passedRadarTimerRef = useRef(null);
+  const minObservedRadarDistRef = useRef(Infinity);
+
   useEffect(() => {
     if (!placement.x && !placement.z) return;
     if (placement.x === 0 && placement.z === 0) return;
@@ -185,30 +218,56 @@ export default function GpsView({ data, isEmbedded = false }) {
     let nearestRadar = null;
     let minDistance = Infinity;
 
+    // Converte heading (graus) para vetor unitário do caminhão (+x leste, -z norte na trigonometria ETS2)
+    const headingRad = ((placement.heading || 0) * Math.PI) / 180.0;
+    const truckDirX = Math.sin(headingRad);
+    const truckDirZ = -Math.cos(headingRad);
+
     for (const cam of ETS2_SPEED_CAMERAS) {
       const dx = cam.x - placement.x;
       const dz = cam.z - placement.z;
       const distMeters = Math.hypot(dx, dz);
 
+      // Produto escalar para verificar se o radar está à frente ou atrás do caminhão
+      const dotAhead = dx * truckDirX + dz * truckDirZ;
+
       if (distMeters < minDistance) {
         minDistance = distMeters;
-        nearestRadar = { ...cam, distance: Math.round(distMeters) };
+        nearestRadar = { ...cam, distance: Math.round(distMeters), isAhead: dotAhead > -25.0 };
       }
     }
 
     if (nearestRadar && minDistance <= 650) {
+      // Se estava se aproximando e agora passou para trás do caminhão (dotAhead negativo ou distância começou a aumentar)
+      if (minObservedRadarDistRef.current < 250 && (!nearestRadar.isAhead || minDistance > minObservedRadarDistRef.current + 35)) {
+        if (!approachingRadar?.passed) {
+          setApproachingRadar({ ...nearestRadar, passed: true });
+          speakVoice("Radar ultrapassado.");
+          if (passedRadarTimerRef.current) clearTimeout(passedRadarTimerRef.current);
+          passedRadarTimerRef.current = setTimeout(() => {
+            setApproachingRadar(null);
+            minObservedRadarDistRef.current = Infinity;
+          }, 3000);
+        }
+        return;
+      }
+
+      minObservedRadarDistRef.current = Math.min(minObservedRadarDistRef.current, minDistance);
       setApproachingRadar(nearestRadar);
 
       const now = Date.now();
-      if (nearestRadar.id !== lastRadarAlertIdRef.current || (now - lastRadarAlertTimeRef.current > 18000)) {
+      if (nearestRadar.id !== lastRadarAlertIdRef.current || (now - lastRadarAlertTimeRef.current > 16000)) {
         lastRadarAlertIdRef.current = nearestRadar.id;
         lastRadarAlertTimeRef.current = now;
         speakVoice(`Atenção: radar de velocidade à frente a ${nearestRadar.distance} metros. Limite de ${nearestRadar.limit} quilômetros por hora.`);
       }
     } else {
-      setApproachingRadar(null);
+      if (!approachingRadar?.passed) {
+        setApproachingRadar(null);
+        minObservedRadarDistRef.current = Infinity;
+      }
     }
-  }, [placement.x, placement.z, speakVoice]);
+  }, [placement.x, placement.z, placement.heading, speakVoice, approachingRadar?.passed]);
 
   // 5. Inicialização do MapLibre GL com PMTiles Vetoriais do ETS2
   useEffect(() => {
@@ -429,6 +488,87 @@ export default function GpsView({ data, isEmbedded = false }) {
           });
           map.on('mouseleave', 'alternative-route-core', () => {
             map.getCanvas().style.cursor = '';
+          });
+
+          // 1.2 Seta de Manobra na Pista (Estilo Google Maps / Imagem 2 - Traço Branco com Borda Escura sobre a curva)
+          map.addSource('maneuver-turn-arrow-source', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          map.addLayer({
+            id: 'maneuver-turn-arrow-casing',
+            type: 'line',
+            source: 'maneuver-turn-arrow-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#020617',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 8.0, 8, 12.0, 11, 16.0, 14, 22.0],
+              'line-opacity': 0.95,
+            },
+          });
+
+          map.addLayer({
+            id: 'maneuver-turn-arrow-core',
+            type: 'line',
+            source: 'maneuver-turn-arrow-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#ffffff',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 5.0, 8, 8.0, 11, 11.5, 14, 16.0],
+              'line-opacity': 1.0,
+            },
+          });
+
+          // 4.1 Marcador Piscante do Radar Ativo à Frente (Ícone e Ponto Exato)
+          map.addSource('active-radar-beacon-source', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          map.addLayer({
+            id: 'active-radar-pulse-ring',
+            type: 'circle',
+            source: 'active-radar-beacon-source',
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 18, 11, 30],
+              'circle-color': '#ef4444',
+              'circle-opacity': 0.35,
+              'circle-stroke-color': '#ff1744',
+              'circle-stroke-width': 2.0,
+            },
+          });
+
+          map.addLayer({
+            id: 'active-radar-core-point',
+            type: 'circle',
+            source: 'active-radar-beacon-source',
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 7, 11, 12],
+              'circle-color': '#ff1744',
+              'circle-stroke-color': '#ffffff',
+              'circle-stroke-width': 2.5,
+            },
+          });
+
+          map.addLayer({
+            id: 'active-radar-label',
+            type: 'symbol',
+            source: 'active-radar-beacon-source',
+            layout: {
+              'text-field': ['get', 'title'],
+              'text-font': ['Commissioner'],
+              'text-size': 13,
+              'text-anchor': 'bottom',
+              'text-offset': [0, -1.2],
+              'text-allow-overlap': true,
+              'text-ignore-placement': true,
+            },
+            paint: {
+              'text-color': '#ff1744',
+              'text-halo-color': '#020617',
+              'text-halo-width': 2.5,
+            },
           });
 
           // 2. Rastro Percorrido pelo Caminhão (Trajeto histórico recente em laranja)
@@ -672,6 +812,74 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
   }, [alternativeGeoJson, mapLoaded]);
 
+  // 6.2 Atualização da Seta de Manobra na Pista (desenhada sobre a linha da rota no local da curva)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const arrowSource = mapInstanceRef.current.getSource('maneuver-turn-arrow-source');
+    if (arrowSource) {
+      const coords = routeGeoJson?.geometry?.coordinates;
+      if (
+        coords && 
+        coords.length > 5 && 
+        activeManeuver && 
+        activeManeuver.type !== 'destination' && 
+        activeManeuver.distanceMeters <= 600 &&
+        typeof activeManeuver.coord_index === 'number'
+      ) {
+        const cIdx = activeManeuver.coord_index;
+        const startSlice = Math.max(0, cIdx - 4);
+        const endSlice = Math.min(coords.length, cIdx + 5);
+        const arrowSlice = coords.slice(startSlice, endSlice);
+
+        if (arrowSlice.length >= 2) {
+          arrowSource.setData({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                properties: { type: activeManeuver.type },
+                geometry: {
+                  type: 'LineString',
+                  coordinates: arrowSlice,
+                },
+              },
+            ],
+          });
+          return;
+        }
+      }
+      arrowSource.setData({ type: 'FeatureCollection', features: [] });
+    }
+  }, [routeGeoJson, activeManeuver, mapLoaded]);
+
+  // 6.3 Atualização do Marcador Piscante do Radar no Mapa no Ponto Exato
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const source = mapInstanceRef.current.getSource('active-radar-beacon-source');
+    if (source) {
+      if (approachingRadar && !approachingRadar.passed) {
+        const radarGeo = convertEts2ToGeo(approachingRadar.x, approachingRadar.z);
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: {
+                title: `📸 RADAR (${approachingRadar.limit} KM/H)`,
+              },
+              geometry: {
+                type: 'Point',
+                coordinates: radarGeo,
+              },
+            },
+          ],
+        });
+      } else {
+        source.setData({ type: 'FeatureCollection', features: [] });
+      }
+    }
+  }, [approachingRadar, mapLoaded]);
+
   // 7. Atualização do Destino e Empresa no MapLibre GL
   useEffect(() => {
     if (!mapInstanceRef.current || !mapLoaded) return;
@@ -905,8 +1113,8 @@ export default function GpsView({ data, isEmbedded = false }) {
     for (let i = 0; i < maneuvers.length; i++) {
       const m = maneuvers[i];
       const targetIdx = typeof m.coord_index === 'number' ? m.coord_index : 0;
-      const distDirect = m.point ? calcDistMeters(truckGeo, m.point) : Infinity;
-      if (targetIdx > closestIdx || distDirect > 30 || m.type === 'destination') {
+      // Se a manobra está à frente (ou estamos a menos de 25m do ápice mas ainda não passamos o índice + 2)
+      if (targetIdx > closestIdx + 1 || (targetIdx >= closestIdx && m.type === 'destination')) {
         nextM = m;
         mIdx = i;
         break;
@@ -957,6 +1165,7 @@ export default function GpsView({ data, isEmbedded = false }) {
       distanceText,
       distanceMeters: Math.round(distAlongRoute),
       coord_index: nextM.coord_index,
+      point: nextM.point,
       color,
     };
   }, [routeStatus, routeError, routeGeoJson, maneuvers, destinationInfo, routeStats, nav?.distance, placement.x, placement.z, calcDistMeters]);
@@ -969,10 +1178,10 @@ export default function GpsView({ data, isEmbedded = false }) {
     const instr = activeManeuver.instruction;
 
     if (activeManeuver.type === 'destination') {
-      if (dist <= 650 && dist > 450 && lastSpokenManeuverStageRef.current !== `${mId}_600`) {
+      if (dist <= 600 && dist > 400 && lastSpokenManeuverStageRef.current !== `${mId}_600`) {
         lastSpokenManeuverStageRef.current = `${mId}_600`;
-        speakVoice(`A 600 metros, seu destino final.`);
-      } else if (dist <= 50 && lastSpokenManeuverStageRef.current !== `${mId}_arrived`) {
+        speakVoice(`A 500 metros, seu destino final.`);
+      } else if (dist <= 60 && lastSpokenManeuverStageRef.current !== `${mId}_arrived`) {
         lastSpokenManeuverStageRef.current = `${mId}_arrived`;
         speakVoice(`Você chegou ao seu destino.`);
       }
@@ -980,14 +1189,19 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
 
     // Pré-aviso a ~500 metros
-    if (dist <= 550 && dist > 350 && lastSpokenManeuverStageRef.current !== `${mId}_500`) {
+    if (dist <= 520 && dist > 320 && lastSpokenManeuverStageRef.current !== `${mId}_500`) {
       lastSpokenManeuverStageRef.current = `${mId}_500`;
-      speakVoice(`A 500 metros, ${instr}.`);
+      speakVoice(`A 500 metros, ${instr.toLowerCase()}.`);
     }
-    // Aviso imediato a ~200-300 metros
-    else if (dist <= 300 && dist > 80 && lastSpokenManeuverStageRef.current !== `${mId}_300`) {
-      lastSpokenManeuverStageRef.current = `${mId}_300`;
-      speakVoice(`A 300 metros, ${instr}.`);
+    // Segundo aviso a ~200 metros
+    else if (dist <= 250 && dist > 90 && lastSpokenManeuverStageRef.current !== `${mId}_200`) {
+      lastSpokenManeuverStageRef.current = `${mId}_200`;
+      speakVoice(`A 200 metros, ${instr.toLowerCase()}.`);
+    }
+    // Aviso imediato no momento da curva (40 a 75 metros)
+    else if (dist <= 75 && dist > 15 && lastSpokenManeuverStageRef.current !== `${mId}_now`) {
+      lastSpokenManeuverStageRef.current = `${mId}_now`;
+      speakVoice(`${instr} agora.`);
     }
   }, [activeManeuver, voiceEnabled, routeStatus, speakVoice]);
 
@@ -1073,18 +1287,24 @@ export default function GpsView({ data, isEmbedded = false }) {
         )}
       </div>
 
-      {/* 4. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros) */}
+      {/* 4. ALERTA ANTECIPADO DE RADAR DE VELOCIDADE (Com contagem em metros e status ultrapassado) */}
       {approachingRadar && (
-        <div className="radar-ahead-warning-card blink-alert">
-          <div className="radar-camera-badge">
+        <div className={`radar-ahead-warning-card ${approachingRadar.passed ? 'radar-passed-card' : 'blink-alert'}`}>
+          <div className="radar-camera-badge" style={{ backgroundColor: approachingRadar.passed ? '#10b981' : '#ef4444' }}>
             <Camera size={26} color="#ffffff" />
           </div>
           <div className="radar-ahead-details">
             <div className="radar-title-row">
-              <h4>RADAR À FRENTE!</h4>
+              <h4>{approachingRadar.passed ? 'RADAR ULTRAPASSADO' : 'RADAR À FRENTE!'}</h4>
               <span className="radar-limit-pill">{approachingRadar.limit} KM/H</span>
             </div>
-            <p>Distância: <strong>{approachingRadar.distance} metros</strong> • Reduza a velocidade!</p>
+            <p>
+              {approachingRadar.passed ? (
+                <strong style={{ color: '#10b981' }}>✓ Você passou pelo radar com segurança.</strong>
+              ) : (
+                <>Distância: <strong>{approachingRadar.distance} metros</strong> • Ponto exato piscando no mapa!</>
+              )}
+            </p>
           </div>
         </div>
       )}
@@ -1135,12 +1355,14 @@ export default function GpsView({ data, isEmbedded = false }) {
 
       {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária e Seletor de Rotas Google Maps */}
       <div className={`gps-bottom-destination-card ${isEmbedded ? 'embedded-bottom-card' : ''}`}>
-        {/* Seletor de Rotas Inteligente Estilo Google Maps */}
+        {/* Seletor de Rotas Inteligente Estilo Google Maps com Pedágios e Fronteiras */}
         {routes && routes.length > 1 && (
           <div className="gps-route-options-shelf">
             {routes.map((r) => {
               const isSelected = r.id === activeRouteId;
               const isAlt = r.id !== 'primary';
+              const tollsCount = r.tolls_count || 0;
+              const bordersCount = r.borders_count || 0;
               return (
                 <button
                   key={r.id}
@@ -1149,9 +1371,9 @@ export default function GpsView({ data, isEmbedded = false }) {
                   onClick={() => {
                     selectRoute(r.id);
                     if (r.id === 'primary') {
-                      speakVoice('Rota principal mais rápida selecionada.');
+                      speakVoice(`Rota mais rápida selecionada. ${tollsCount > 0 ? `${tollsCount} pedágios no percurso.` : 'Sem pedágios.'}`);
                     } else {
-                      speakVoice(`Via alternativa selecionada. Mais ${r.diff_km}.`);
+                      speakVoice(`Via alternativa selecionada. Mais ${r.diff_km}. ${tollsCount > 0 ? `${tollsCount} pedágios.` : 'Sem pedágios.'}`);
                     }
                   }}
                   title={isAlt ? `Via alternativa: ${r.diff_km} (${r.diff_minutes})` : "Rota mais rápida recomendada"}
@@ -1167,6 +1389,16 @@ export default function GpsView({ data, isEmbedded = false }) {
                       <span className="chip-diff-loss">{r.diff_minutes} ({r.diff_km})</span>
                     ) : (
                       <span className="chip-diff-best">Mais rápida</span>
+                    )}
+                  </div>
+                  <div className="chip-extra-tags">
+                    {tollsCount > 0 ? (
+                      <span className="tag-toll">💳 {tollsCount} {tollsCount === 1 ? 'pedágio' : 'pedágios'}</span>
+                    ) : (
+                      <span className="tag-toll-free">✓ Sem pedágios</span>
+                    )}
+                    {bordersCount > 0 && (
+                      <span className="tag-border">🛂 {bordersCount} {bordersCount === 1 ? 'fronteira' : 'fronteiras'}</span>
                     )}
                   </div>
                 </button>

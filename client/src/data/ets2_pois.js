@@ -33,20 +33,25 @@ export const ETS2_CITIES = [
 
 // Radares Fixos de Velocidade (Speed Cameras) nas principais rodovias do jogo
 export const ETS2_SPEED_CAMERAS = [
-  // França - Rodovias A1, A6, A7, A10
+  // Alemanha - Região do Ruhr e Autobahns A1, A2, A3, A40, A42, A45, A7, A9
+  { id: "cam-de-a40-1", name: "Radar A40 (Dortmund - Essen)", limit: 80, x: -8500.0, z: -1800.0 },
+  { id: "cam-de-a40-2", name: "Radar A40 (Essen - Duisburg)", limit: 80, x: -12100.0, z: -1950.0 },
+  { id: "cam-de-a42-1", name: "Radar A42 (Oberhausen - Duisburg)", limit: 80, x: -13800.0, z: -2400.0 },
+  { id: "cam-de-a1-1", name: "Radar A1 (Kamener Kreuz / Dortmund)", limit: 100, x: -4200.0, z: -1500.0 },
+  { id: "cam-de-a3-1", name: "Radar A3 (Kreuz Kaiserberg / Duisburg)", limit: 80, x: -14500.0, z: -1700.0 },
+  { id: "cam-de-1", name: "Radar A2 (Hannover - Berlim)", limit: 80, x: -1200.0, z: -11500.0 },
+  { id: "cam-de-2", name: "Radar A3 (Colônia - Frankfurt)", limit: 80, x: -9800.0, z: -300.0 },
+  { id: "cam-de-3", name: "Radar A7 (Kassel - Würzburg)", limit: 80, x: -3100.0, z: 6200.0 },
+  { id: "cam-de-4", name: "Radar A9 (Nürnberg - Munique)", limit: 80, x: 2200.0, z: 11800.0 },
+  { id: "cam-de-5", name: "Radar A1 (Bremen - Hamburgo)", limit: 80, x: -2100.0, z: -17500.0 },
+
+  // França - Rodovias A1, A6, A7, A10, A4
   { id: "cam-fr-1", name: "Radar A1 (Paris - Lille)", limit: 90, x: -30500.0, z: -2100.0 },
   { id: "cam-fr-2", name: "Radar A6 (Paris - Lyon)", limit: 90, x: -27200.0, z: 15400.0 },
   { id: "cam-fr-3", name: "Radar A7 (Lyon - Marselha)", limit: 90, x: -22800.0, z: 31200.0 },
   { id: "cam-fr-4", name: "Radar A10 (Paris - Bordeaux)", limit: 90, x: -38200.0, z: 18500.0 },
   { id: "cam-fr-5", name: "Radar A4 (Paris - Reims)", limit: 80, x: -24100.0, z: 4800.0 },
   { id: "cam-fr-6", name: "Radar Calais Porto", limit: 50, x: -30150.0, z: -10750.0 },
-
-  // Alemanha - Zonas de Obras e Cruzamentos com radar
-  { id: "cam-de-1", name: "Radar A2 (Hannover - Berlim)", limit: 80, x: -1200.0, z: -11500.0 },
-  { id: "cam-de-2", name: "Radar A3 (Colônia - Frankfurt)", limit: 80, x: -9800.0, z: -300.0 },
-  { id: "cam-de-3", name: "Radar A7 (Kassel - Würzburg)", limit: 80, x: -3100.0, z: 6200.0 },
-  { id: "cam-de-4", name: "Radar A9 (Nürnberg - Munique)", limit: 80, x: 2200.0, z: 11800.0 },
-  { id: "cam-de-5", name: "Radar A1 (Bremen - Hamburgo)", limit: 80, x: -2100.0, z: -17500.0 },
 
   // Reino Unido - Rodovias M25, M1, M6
   { id: "cam-uk-1", name: "Radar M25 Orbital Londres", limit: 80, x: -38500.0, z: -14200.0 },
@@ -92,23 +97,53 @@ export const ETS2_REST_STOPS = [
   { id: "rest-6", name: "Pátio de Descanso A4 Polônia", type: "parking", x: 27100.0, z: 2900.0 },
 ];
 
-// Praças de Pedágio (Tolls / Péage / Barriera)
+// Praças de Pedágio (Tolls / Péage / Barriera / Autopista)
 export const ETS2_TOLLS = [
-  { id: "toll-1", name: "Péage A1 Senlis", cost: "€18", x: -30100.0, z: 2800.0 },
-  { id: "toll-2", name: "Péage A6 Fleury", cost: "€24", x: -29200.0, z: 9800.0 },
-  { id: "toll-3", name: "Péage A7 Vienne", cost: "€22", x: -23100.0, z: 28400.0 },
-  { id: "toll-4", name: "Péage A10 Saint-Arnoult", cost: "€28", x: -33200.0, z: 9100.0 },
-  { id: "toll-5", name: "Barriera Milano Nord", cost: "€16", x: -2900.0, z: 26800.0 },
-  { id: "toll-6", name: "Barriera Roma Nord", cost: "€22", x: 3800.0, z: 39900.0 },
-  { id: "toll-7", name: "Pedágio A2 Nowy Tomysl", cost: "18 PLN", x: 22400.0, z: -8100.0 },
+  { id: "toll_fr_1", name: "Péage A1 Senlis", country: "França", cost: "€18", x: -30100.0, z: 2800.0 },
+  { id: "toll_fr_2", name: "Péage A6 Fleury", country: "França", cost: "€24", x: -29200.0, z: 9800.0 },
+  { id: "toll_fr_3", name: "Péage A7 Vienne", country: "França", cost: "€22", x: -23100.0, z: 28400.0 },
+  { id: "toll_fr_4", name: "Péage A10 Saint-Arnoult", country: "França", cost: "€28", x: -33200.0, z: 9100.0 },
+  { id: "toll_fr_5", name: "Péage A4 Reims", country: "França", cost: "€19", x: -22800.0, z: 4900.0 },
+  { id: "toll_fr_6", name: "Péage A13 Mantes", country: "França", cost: "€14", x: -34500.0, z: 4200.0 },
+  { id: "toll_fr_7", name: "Péage A26 Chamouille", country: "França", cost: "€16", x: -26500.0, z: 1100.0 },
+  { id: "toll_fr_8", name: "Péage A71 Vierzon", country: "França", cost: "€21", x: -32100.0, z: 18500.0 },
+  { id: "toll_fr_9", name: "Péage A9 Montpellier", country: "França", cost: "€26", x: -24500.0, z: 39500.0 },
+  { id: "toll_it_1", name: "Barriera Milano Nord", country: "Itália", cost: "€16", x: -2900.0, z: 26800.0 },
+  { id: "toll_it_2", name: "Barriera Roma Nord", country: "Itália", cost: "€22", x: 3800.0, z: 39900.0 },
+  { id: "toll_it_3", name: "Barriera Verona Sud", country: "Itália", cost: "€15", x: 2100.0, z: 29200.0 },
+  { id: "toll_it_4", name: "Barriera Firenze Ovest", country: "Itália", cost: "€18", x: 2900.0, z: 34800.0 },
+  { id: "toll_it_5", name: "Barriera Torino Est", country: "Itália", cost: "€14", x: -8100.0, z: 27500.0 },
+  { id: "toll_it_6", name: "Barriera Bologna Arcoveggio", country: "Itália", cost: "€12", x: 3500.0, z: 32100.0 },
+  { id: "toll_pl_1", name: "Pedágio A2 Nowy Tomysl", country: "Polônia", cost: "18 PLN", x: 22400.0, z: -8100.0 },
+  { id: "toll_pl_2", name: "Pedágio A2 Konin", country: "Polônia", cost: "22 PLN", x: 29800.0, z: -7400.0 },
+  { id: "toll_pl_3", name: "Pedágio A4 Gliwice", country: "Polônia", cost: "16 PLN", x: 28400.0, z: 3500.0 },
+  { id: "toll_es_1", name: "Peaje AP-7 La Jonquera", country: "Espanha", cost: "€18", x: -31200.0, z: 44800.0 },
+  { id: "toll_es_2", name: "Peaje AP-2 Zaragoza", country: "Espanha", cost: "€20", x: -42100.0, z: 48200.0 },
+  { id: "toll_es_3", name: "Peaje AP-6 Guadarrama", country: "Espanha", cost: "€15", x: -52400.0, z: 49800.0 },
+  { id: "toll_no_1", name: "Bompenger E6 Oslo", country: "Noruega", cost: "55 NOK", x: 4200.0, z: -42100.0 },
+  { id: "toll_pt_1", name: "Portagem A1 Alverca", country: "Portugal", cost: "€12", x: -68100.0, z: 54200.0 },
 ];
 
 // Fronteiras e Portos (Borders & Ferry Terminals)
 export const ETS2_BORDERS = [
-  { id: "border-1", name: "Eurotunnel Calais (Trem)", type: "train", x: -30300.0, z: -11200.0 },
-  { id: "border-2", name: "Porto de Calais (Balsa)", type: "ferry", x: -29900.0, z: -10500.0 },
-  { id: "border-3", name: "Porto de Dover (Balsa)", type: "ferry", x: -33200.0, z: -12800.0 },
-  { id: "border-4", name: "Fronteira França - Suíça (Basel)", type: "customs", x: -11900.0, z: 16800.0 },
-  { id: "border-5", name: "Fronteira Alemanha - Áustria (Salzburg)", type: "open", x: 12200.0, z: 17100.0 },
-  { id: "border-6", name: "Fronteira Alemanha - Polônia (Frankfurt Oder)", type: "open", x: 21900.0, z: -8900.0 },
+  { id: "border_calais_eurotunnel", name: "Eurotunnel (França ➔ Reino Unido)", type: "trem", x: -30300.0, z: -11200.0 },
+  { id: "border_calais_ferry", name: "Porto de Calais (Balsa)", type: "balsa", x: -29900.0, z: -10500.0 },
+  { id: "border_dover_ferry", name: "Porto de Dover (Balsa)", type: "balsa", x: -33200.0, z: -12800.0 },
+  { id: "border_fr_ch_basel", name: "Fronteira França / Suíça (Basel Aduana)", type: "aduana", x: -11900.0, z: 16800.0 },
+  { id: "border_fr_ch_geneve", name: "Fronteira França / Suíça (Genebra Aduana)", type: "aduana", x: -18400.0, z: 22100.0 },
+  { id: "border_de_ch_basel", name: "Fronteira Alemanha / Suíça (Weil am Rhein)", type: "aduana", x: -11200.0, z: 15900.0 },
+  { id: "border_de_at_salzburg", name: "Fronteira Alemanha / Áustria (Salzburg)", type: "livre", x: 12200.0, z: 17100.0 },
+  { id: "border_de_at_kufstein", name: "Fronteira Alemanha / Áustria (Kufstein A12)", type: "livre", x: 6800.0, z: 18900.0 },
+  { id: "border_at_it_brenner", name: "Passo do Brenner (Áustria / Itália)", type: "livre", x: 3900.0, z: 24100.0 },
+  { id: "border_at_it_tarvisio", name: "Fronteira Áustria / Itália (Tarvisio A23)", type: "livre", x: 16800.0, z: 24500.0 },
+  { id: "border_de_pl_frankfurt", name: "Fronteira Alemanha / Polônia (Frankfurt Oder)", type: "livre", x: 21900.0, z: -8900.0 },
+  { id: "border_de_pl_gorlitz", name: "Fronteira Alemanha / Polônia (Görlitz A4)", type: "livre", x: 23100.0, z: -2100.0 },
+  { id: "border_de_cz_dresden", name: "Fronteira Alemanha / Rep. Tcheca (Dresden - Usti)", type: "livre", x: 17400.0, z: 1200.0 },
+  { id: "border_de_cz_rozvadov", name: "Fronteira Alemanha / Rep. Tcheca (Rozvadov D5)", type: "livre", x: 9800.0, z: 6900.0 },
+  { id: "border_fr_es_irun", name: "Fronteira França / Espanha (Irun / Biriatou)", type: "livre", x: -41200.0, z: 38900.0 },
+  { id: "border_fr_es_jonquera", name: "Fronteira França / Espanha (La Jonquera AP-7)", type: "livre", x: -31400.0, z: 44200.0 },
+  { id: "border_es_pt_badajoz", name: "Fronteira Espanha / Portugal (Badajoz - Elvas)", type: "livre", x: -61200.0, z: 51400.0 },
+  { id: "border_es_pt_vilar", name: "Fronteira Espanha / Portugal (Vilar Formoso)", type: "livre", x: -58900.0, z: 43200.0 },
+  { id: "border_dk_se_oresund", name: "Ponte de Øresund (Dinamarca ➔ Suécia)", type: "pedagio_fronteira", x: 5800.0, z: -32400.0 },
+  { id: "border_de_dk_flensburg", name: "Fronteira Alemanha / Dinamarca (Flensburg E45)", type: "livre", x: 1200.0, z: -26500.0 },
 ];

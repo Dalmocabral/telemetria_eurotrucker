@@ -36,6 +36,57 @@ KNOWN_CUSTOM_LOCATIONS: Dict[str, Dict[str, Any]] = {
     "tmp": {"token": "truckersmp", "name": "TruckersMP HQ", "x": 23550.0, "y": -2000.0, "country": "poland"},
 }
 
+# Praças de Pedágio mapeadas no ETS2 (coordenadas nativas X, Z)
+ETS2_TOLL_BOOTHS: List[Dict[str, Any]] = [
+    {"id": "toll_fr_1", "name": "Péage A1 Senlis", "country": "França", "cost": "€18", "coords_ets2": (-30100.0, 2800.0)},
+    {"id": "toll_fr_2", "name": "Péage A6 Fleury", "country": "França", "cost": "€24", "coords_ets2": (-29200.0, 9800.0)},
+    {"id": "toll_fr_3", "name": "Péage A7 Vienne", "country": "França", "cost": "€22", "coords_ets2": (-23100.0, 28400.0)},
+    {"id": "toll_fr_4", "name": "Péage A10 Saint-Arnoult", "country": "França", "cost": "€28", "coords_ets2": (-33200.0, 9100.0)},
+    {"id": "toll_fr_5", "name": "Péage A4 Reims", "country": "França", "cost": "€19", "coords_ets2": (-22800.0, 4900.0)},
+    {"id": "toll_fr_6", "name": "Péage A13 Mantes", "country": "França", "cost": "€14", "coords_ets2": (-34500.0, 4200.0)},
+    {"id": "toll_fr_7", "name": "Péage A26 Chamouille", "country": "França", "cost": "€16", "coords_ets2": (-26500.0, 1100.0)},
+    {"id": "toll_fr_8", "name": "Péage A71 Vierzon", "country": "França", "cost": "€21", "coords_ets2": (-32100.0, 18500.0)},
+    {"id": "toll_fr_9", "name": "Péage A9 Montpellier", "country": "França", "cost": "€26", "coords_ets2": (-24500.0, 39500.0)},
+    {"id": "toll_it_1", "name": "Barriera Milano Nord", "country": "Itália", "cost": "€16", "coords_ets2": (-2900.0, 26800.0)},
+    {"id": "toll_it_2", "name": "Barriera Roma Nord", "country": "Itália", "cost": "€22", "coords_ets2": (3800.0, 39900.0)},
+    {"id": "toll_it_3", "name": "Barriera Verona Sud", "country": "Itália", "cost": "€15", "coords_ets2": (2100.0, 29200.0)},
+    {"id": "toll_it_4", "name": "Barriera Firenze Ovest", "country": "Itália", "cost": "€18", "coords_ets2": (2900.0, 34800.0)},
+    {"id": "toll_it_5", "name": "Barriera Torino Est", "country": "Itália", "cost": "€14", "coords_ets2": (-8100.0, 27500.0)},
+    {"id": "toll_it_6", "name": "Barriera Bologna Arcoveggio", "country": "Itália", "cost": "€12", "coords_ets2": (3500.0, 32100.0)},
+    {"id": "toll_pl_1", "name": "Pedágio A2 Nowy Tomysl", "country": "Polônia", "cost": "18 PLN", "coords_ets2": (22400.0, -8100.0)},
+    {"id": "toll_pl_2", "name": "Pedágio A2 Konin", "country": "Polônia", "cost": "22 PLN", "coords_ets2": (29800.0, -7400.0)},
+    {"id": "toll_pl_3", "name": "Pedágio A4 Gliwice", "country": "Polônia", "cost": "16 PLN", "coords_ets2": (28400.0, 3500.0)},
+    {"id": "toll_es_1", "name": "Peaje AP-7 La Jonquera", "country": "Espanha", "cost": "€18", "coords_ets2": (-31200.0, 44800.0)},
+    {"id": "toll_es_2", "name": "Peaje AP-2 Zaragoza", "country": "Espanha", "cost": "€20", "coords_ets2": (-42100.0, 48200.0)},
+    {"id": "toll_es_3", "name": "Peaje AP-6 Guadarrama", "country": "Espanha", "cost": "€15", "coords_ets2": (-52400.0, 49800.0)},
+    {"id": "toll_no_1", "name": "Bompenger E6 Oslo", "country": "Noruega", "cost": "55 NOK", "coords_ets2": (4200.0, -42100.0)},
+    {"id": "toll_pt_1", "name": "Portagem A1 Alverca", "country": "Portugal", "cost": "€12", "coords_ets2": (-68100.0, 54200.0)},
+]
+
+# Postos de Fronteira e Travessias Internacionais mapeados no ETS2
+ETS2_BORDER_CROSSINGS: List[Dict[str, Any]] = [
+    {"id": "border_calais_eurotunnel", "name": "Eurotunnel (França ➔ Reino Unido)", "type": "trem", "coords_ets2": (-30300.0, -11200.0)},
+    {"id": "border_calais_ferry", "name": "Porto de Calais (Balsa)", "type": "balsa", "coords_ets2": (-29900.0, -10500.0)},
+    {"id": "border_dover_ferry", "name": "Porto de Dover (Balsa)", "type": "balsa", "coords_ets2": (-33200.0, -12800.0)},
+    {"id": "border_fr_ch_basel", "name": "Fronteira França / Suíça (Basel Aduana)", "type": "aduana", "coords_ets2": (-11900.0, 16800.0)},
+    {"id": "border_fr_ch_geneve", "name": "Fronteira França / Suíça (Genebra Aduana)", "type": "aduana", "coords_ets2": (-18400.0, 22100.0)},
+    {"id": "border_de_ch_basel", "name": "Fronteira Alemanha / Suíça (Weil am Rhein)", "type": "aduana", "coords_ets2": (-11200.0, 15900.0)},
+    {"id": "border_de_at_salzburg", "name": "Fronteira Alemanha / Áustria (Salzburg)", "type": "livre", "coords_ets2": (12200.0, 17100.0)},
+    {"id": "border_de_at_kufstein", "name": "Fronteira Alemanha / Áustria (Kufstein A12)", "type": "livre", "coords_ets2": (6800.0, 18900.0)},
+    {"id": "border_at_it_brenner", "name": "Passo do Brenner (Áustria / Itália)", "type": "livre", "coords_ets2": (3900.0, 24100.0)},
+    {"id": "border_at_it_tarvisio", "name": "Fronteira Áustria / Itália (Tarvisio A23)", "type": "livre", "coords_ets2": (16800.0, 24500.0)},
+    {"id": "border_de_pl_frankfurt", "name": "Fronteira Alemanha / Polônia (Frankfurt Oder)", "type": "livre", "coords_ets2": (21900.0, -8900.0)},
+    {"id": "border_de_pl_gorlitz", "name": "Fronteira Alemanha / Polônia (Görlitz A4)", "type": "livre", "coords_ets2": (23100.0, -2100.0)},
+    {"id": "border_de_cz_dresden", "name": "Fronteira Alemanha / Rep. Tcheca (Dresden - Usti)", "type": "livre", "coords_ets2": (17400.0, 1200.0)},
+    {"id": "border_de_cz_rozvadov", "name": "Fronteira Alemanha / Rep. Tcheca (Rozvadov D5)", "type": "livre", "coords_ets2": (9800.0, 6900.0)},
+    {"id": "border_fr_es_irun", "name": "Fronteira França / Espanha (Irun / Biriatou)", "type": "livre", "coords_ets2": (-41200.0, 38900.0)},
+    {"id": "border_fr_es_jonquera", "name": "Fronteira França / Espanha (La Jonquera AP-7)", "type": "livre", "coords_ets2": (-31400.0, 44200.0)},
+    {"id": "border_es_pt_badajoz", "name": "Fronteira Espanha / Portugal (Badajoz - Elvas)", "type": "livre", "coords_ets2": (-61200.0, 51400.0)},
+    {"id": "border_es_pt_vilar", "name": "Fronteira Espanha / Portugal (Vilar Formoso)", "type": "livre", "coords_ets2": (-58900.0, 43200.0)},
+    {"id": "border_dk_se_oresund", "name": "Ponte de Øresund (Dinamarca ➔ Suécia)", "type": "pedagio_fronteira", "coords_ets2": (5800.0, -32400.0)},
+    {"id": "border_de_dk_flensburg", "name": "Fronteira Alemanha / Dinamarca (Flensburg E45)", "type": "livre", "coords_ets2": (1200.0, -26500.0)},
+]
+
 
 def convert_ets2_to_geo(game_x: float, game_z: float) -> Tuple[float, float]:
     """Converte coordenadas nativas do ETS2 (game_x, game_z) para Geo WGS84 Mercator (lon, lat)."""
@@ -515,6 +566,7 @@ class RoadRouter:
 
         primary_eta_min = max(1, round((cost / 1000.0) / 72.0 * 60.0))
         primary_feature = self._build_geojson_feature(route_coords, dest_info, cost)
+        primary_tolls, primary_borders = self._detect_tolls_and_borders(route_coords)
 
         primary_route_obj = {
             "id": "primary",
@@ -525,6 +577,10 @@ class RoadRouter:
             "eta_formatted": f"{primary_eta_min // 60}h {primary_eta_min % 60:02d}m" if primary_eta_min >= 60 else f"{primary_eta_min} min",
             "diff_km": "0 km",
             "diff_minutes": "0 min",
+            "tolls_count": len(primary_tolls),
+            "tolls": primary_tolls,
+            "borders_count": len(primary_borders),
+            "borders": primary_borders,
             "is_fastest": True,
             "geojson": primary_feature,
             "maneuvers": maneuvers,
@@ -565,6 +621,7 @@ class RoadRouter:
 
                     alt_maneuvers = self._generate_maneuvers(alt_coords, alt_nodes)
                     alt_eta_min = max(1, round((alt_cost / 1000.0) / 72.0 * 60.0))
+                    alt_tolls, alt_borders = self._detect_tolls_and_borders(alt_coords)
                     
                     diff_km_num = round((alt_cost - cost) / 1000.0, 1)
                     diff_min_num = alt_eta_min - primary_eta_min
@@ -585,6 +642,10 @@ class RoadRouter:
                         "diff_km": diff_km_str,
                         "diff_minutes": diff_min_str,
                         "diff_seconds": diff_min_num * 60,
+                        "tolls_count": len(alt_tolls),
+                        "tolls": alt_tolls,
+                        "borders_count": len(alt_borders),
+                        "borders": alt_borders,
                         "is_fastest": False,
                         "overlap_percent": round(overlap_ratio * 100, 1),
                         "geojson": alt_feature,
@@ -710,75 +771,152 @@ class RoadRouter:
 
         return coords
 
+    def _detect_tolls_and_borders(self, coords: List[List[float]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Detecta praças de pedágio e postos de fronteira reais ao longo da rota."""
+        if not coords or len(coords) < 2:
+            return [], []
+
+        # Amostra pontos a cada ~30m para verificação rápida
+        step = max(1, len(coords) // 250)
+        sampled_coords = [coords[i] for i in range(0, len(coords), step)]
+        if sampled_coords[-1] != coords[-1]:
+            sampled_coords.append(coords[-1])
+
+        detected_tolls = []
+        for toll in ETS2_TOLL_BOOTHS:
+            t_lon, t_lat = convert_ets2_to_geo(*toll["coords_ets2"])
+            t_pos = (t_lon, t_lat)
+            for pt in sampled_coords:
+                if geo_distance_meters(t_pos, (pt[0], pt[1])) < 220.0:
+                    detected_tolls.append({
+                        "name": toll["name"],
+                        "cost": toll["cost"],
+                        "country": toll["country"],
+                    })
+                    break
+
+        detected_borders = []
+        for border in ETS2_BORDER_CROSSINGS:
+            b_lon, b_lat = convert_ets2_to_geo(*border["coords_ets2"])
+            b_pos = (b_lon, b_lat)
+            for pt in sampled_coords:
+                if geo_distance_meters(b_pos, (pt[0], pt[1])) < 280.0:
+                    detected_borders.append({
+                        "name": border["name"],
+                        "type": border["type"],
+                    })
+                    break
+
+        return detected_tolls, detected_borders
+
     def _generate_maneuvers(self, coords: List[List[float]], path_nodes: List[int]) -> List[Dict[str, Any]]:
-        """Gera lista de manobras baseada nas curvas reais da geometria da rota."""
+        """Gera lista de manobras de alta precisão baseada em janela métrica contínua e bifurcações reais."""
         if len(coords) < 3:
-            return [{"type": "straight", "distance": 0, "instruction": "Siga pela rodovia"}]
+            return [{
+                "type": "destination",
+                "distance": 0,
+                "instruction": "Destino final à frente",
+                "turn_text": "Destino final",
+                "point": coords[-1] if coords else [0.0, 0.0],
+                "point_before": coords[0] if coords else [0.0, 0.0],
+                "point_after": coords[-1] if coords else [0.0, 0.0],
+                "coord_index": 0,
+            }]
+
+        # Pré-computa distâncias acumuladas para precisão métrica
+        cum = [0.0]
+        for i in range(len(coords) - 1):
+            cum.append(cum[-1] + geo_distance_meters((coords[i][0], coords[i][1]), (coords[i + 1][0], coords[i + 1][1])))
+
+        LOOK_DIST = 50.0  # Janela de análise de 50 metros antes e depois
+        raw_turns = []
+        for i in range(1, len(coords) - 1):
+            cur_d = cum[i]
+            i_back = i - 1
+            while i_back > 0 and (cur_d - cum[i_back]) < LOOK_DIST:
+                i_back -= 1
+            i_fwd = i + 1
+            while i_fwd < len(coords) - 1 and (cum[i_fwd] - cur_d) < LOOK_DIST:
+                i_fwd += 1
+
+            p_back = coords[i_back]
+            p_cur = coords[i]
+            p_fwd = coords[i_fwd]
+
+            v1 = (p_cur[0] - p_back[0], p_cur[1] - p_back[1])
+            v2 = (p_fwd[0] - p_cur[0], p_fwd[1] - p_cur[1])
+
+            a1 = math.atan2(v1[1], v1[0])
+            a2 = math.atan2(v2[1], v2[0])
+            diff = math.degrees(a2 - a1)
+            while diff > 180.0: diff -= 360.0
+            while diff < -180.0: diff += 360.0
+
+            if abs(diff) >= 20.0:
+                raw_turns.append((i, cur_d, diff, p_cur))
+
+        # Agrupa curvas consecutivas num raio de 85m para encontrar o ápice
+        clustered = []
+        if raw_turns:
+            cur_cluster = [raw_turns[0]]
+            for t in raw_turns[1:]:
+                if t[1] - cur_cluster[-1][1] < 85.0:
+                    cur_cluster.append(t)
+                else:
+                    apex = max(cur_cluster, key=lambda x: abs(x[2]))
+                    clustered.append(apex)
+                    cur_cluster = [t]
+            if cur_cluster:
+                apex = max(cur_cluster, key=lambda x: abs(x[2]))
+                clustered.append(apex)
 
         maneuvers = []
-        cum_dist = 0.0
-
-        # Amostra a cada ~150 metros para detectar mudanças de direção significativas
-        step = max(1, len(coords) // 25)
-        for i in range(0, len(coords) - step * 2, step):
-            p1 = coords[i]
-            p2 = coords[i + step]
-            p3 = coords[min(len(coords) - 1, i + step * 2)]
-
-            seg_len = geo_distance_meters((p1[0], p1[1]), (p2[0], p2[1]))
-            cum_dist += seg_len
-
-            # Vetores de direção
-            v1 = (p2[0] - p1[0], p2[1] - p1[1])
-            v2 = (p3[0] - p2[0], p3[1] - p2[1])
-
-            angle1 = math.atan2(v1[1], v1[0])
-            angle2 = math.atan2(v2[1], v2[0])
-            diff_deg = math.degrees(angle2 - angle1)
-
-            # Normaliza para [-180, 180]
-            while diff_deg > 180.0:
-                diff_deg -= 360.0
-            while diff_deg < -180.0:
-                diff_deg += 360.0
-
-            if abs(diff_deg) >= 28.0:
+        for idx, d, diff, pt in clustered:
+            if diff > 60.0:
+                if diff > 95.0:
+                    m_type = "sharp-right"
+                    turn_text = "Curva acentuada à direita"
+                else:
+                    m_type = "right"
+                    turn_text = "Vire à direita"
+            elif diff >= 20.0:
                 m_type = "slight-right"
                 turn_text = "Mantenha à direita"
-                if diff_deg > 65.0:
-                    if diff_deg > 100.0:
-                        m_type = "sharp-right"
-                        turn_text = "Curva acentuada à direita"
-                    else:
-                        m_type = "right"
-                        turn_text = "Vire à direita"
-                elif diff_deg < -65.0:
-                    if diff_deg < -100.0:
-                        m_type = "sharp-left"
-                        turn_text = "Curva acentuada à esquerda"
-                    else:
-                        m_type = "left"
-                        turn_text = "Vire à esquerda"
-                elif diff_deg < -28.0:
-                    m_type = "slight-left"
-                    turn_text = "Mantenha à esquerda"
+            elif diff < -60.0:
+                if diff < -95.0:
+                    m_type = "sharp-left"
+                    turn_text = "Curva acentuada à esquerda"
+                else:
+                    m_type = "left"
+                    turn_text = "Vire à esquerda"
+            else:
+                m_type = "slight-left"
+                turn_text = "Mantenha à esquerda"
 
-                maneuvers.append({
-                    "type": m_type,
-                    "distance": int(cum_dist),
-                    "instruction": turn_text,
-                    "turn_text": turn_text,
-                    "point": p2,
-                    "coord_index": min(len(coords) - 1, i + step),
-                })
+            pt_before = coords[max(0, idx - 4)]
+            pt_after = coords[min(len(coords) - 1, idx + 4)]
 
-        # Adiciona o destino final como a última manobra da jornada
+            maneuvers.append({
+                "type": m_type,
+                "distance": int(d),
+                "instruction": turn_text,
+                "turn_text": turn_text,
+                "angle": round(diff, 1),
+                "point": pt,
+                "point_before": pt_before,
+                "point_after": pt_after,
+                "coord_index": idx,
+            })
+
+        # Adiciona o destino final como a última manobra
         maneuvers.append({
             "type": "destination",
-            "distance": int(cum_dist),
+            "distance": int(cum[-1]),
             "instruction": "Destino final à frente",
             "turn_text": "Seu destino final",
             "point": coords[-1],
+            "point_before": coords[-2] if len(coords) >= 2 else coords[-1],
+            "point_after": coords[-1],
             "coord_index": len(coords) - 1,
         })
 
