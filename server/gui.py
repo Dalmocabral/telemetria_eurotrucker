@@ -7,16 +7,67 @@ conectados e um QR Code em alta resolução para conexão instantânea.
 
 import sys
 import os
+
+import io
+
+class SafeWriter:
+    def __init__(self, log_path=None):
+        self.log_path = log_path
+    def write(self, s):
+        if not s:
+            return
+        if self.log_path:
+            try:
+                with open(self.log_path, "a", encoding="utf-8") as f:
+                    f.write(s)
+            except Exception:
+                pass
+    def flush(self):
+        pass
+    def isatty(self):
+        return False
+    def fileno(self):
+        raise io.UnsupportedOperation
+
+# Corrige sys.stdout e sys.stderr sendo None no modo GUI (--windowed) do Windows
+base_log_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+_log_file = os.path.join(base_log_dir, "truckpilot_stdout.log")
+
+if sys.stdout is None:
+    sys.stdout = SafeWriter(_log_file)
+if sys.stderr is None:
+    sys.stderr = SafeWriter(_log_file)
+
 import threading
 import time
 import socket
 import webbrowser
 import subprocess
+import traceback
 import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 import qrcode
 from PIL import Image
+
+# Captura qualquer exceção não tratada e grava em arquivo de log
+def global_crash_handler(exc_type, exc_value, exc_traceback):
+    err = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+    log_file = os.path.join(base_dir, "truckpilot_crash.log")
+    try:
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] ERRO FATAL:\n{err}\n")
+    except Exception:
+        pass
+    try:
+        messagebox.showerror("TruckPilot Pro - Erro", f"Ocorreu um erro ao executar:\n\n{exc_value}\n\nDetalhes gravados em:\n{log_file}")
+    except Exception:
+        pass
+
+sys.excepthook = global_crash_handler
+if hasattr(threading, 'excepthook'):
+    threading.excepthook = lambda args: global_crash_handler(args.exc_type, args.exc_value, args.exc_traceback)
 
 # Importa o leitor e as configurações do servidor
 from main import app, reader, connected_clients, LOCAL_IP, PORT, free_port
@@ -36,8 +87,23 @@ class TelemetryServerApp(ctk.CTk):
         self.configure(fg_color="#0b0f19")
 
         # Configura o ícone oficial do TruckPilot Pro na janela e barra de tarefas
-        icon_path = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
-        if os.path.exists(icon_path):
+        icon_path = None
+        if getattr(sys, 'frozen', False):
+            meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+            for cand in [
+                os.path.join(meipass, "server", "assets", "icon.ico"),
+                os.path.join(meipass, "assets", "icon.ico"),
+                os.path.join(os.path.dirname(sys.executable), "server", "assets", "icon.ico"),
+            ]:
+                if os.path.exists(cand):
+                    icon_path = cand
+                    break
+        else:
+            cand = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "icon.ico")
+            if os.path.exists(cand):
+                icon_path = cand
+
+        if icon_path and os.path.exists(icon_path):
             try:
                 self.iconbitmap(icon_path)
             except Exception as e:
@@ -62,10 +128,17 @@ class TelemetryServerApp(ctk.CTk):
     def start_background_server(self):
         """Inicia o servidor Uvicorn em uma thread daemon separada."""
         def run():
-            free_port(PORT)
-            config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning")
-            self.server_instance = uvicorn.Server(config)
-            self.server_instance.run()
+            try:
+                free_port(PORT)
+                config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning", log_config=None)
+                self.server_instance = uvicorn.Server(config)
+                self.server_instance.run()
+            except Exception as e:
+                import traceback
+                err = traceback.format_exc()
+                base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+                with open(os.path.join(base_dir, "server_thread_error.log"), "a", encoding="utf-8") as f:
+                    f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Server Error:\n{err}\n")
 
         self.server_thread = threading.Thread(target=run, daemon=True)
         self.server_thread.start()
@@ -365,5 +438,7 @@ class TelemetryServerApp(ctk.CTk):
         sys.exit(0)
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
     app_gui = TelemetryServerApp()
     app_gui.mainloop()

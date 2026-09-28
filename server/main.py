@@ -3,6 +3,34 @@ import io
 import socket
 import os
 import sys
+
+class SafeWriter:
+    def __init__(self, log_path=None):
+        self.log_path = log_path
+    def write(self, s):
+        if not s:
+            return
+        if self.log_path:
+            try:
+                with open(self.log_path, "a", encoding="utf-8") as f:
+                    f.write(s)
+            except Exception:
+                pass
+    def flush(self):
+        pass
+    def isatty(self):
+        return False
+    def fileno(self):
+        raise io.UnsupportedOperation
+
+base_log_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+_log_file = os.path.join(base_log_dir, "truckpilot_stdout.log")
+
+if sys.stdout is None:
+    sys.stdout = SafeWriter(_log_file)
+if sys.stderr is None:
+    sys.stderr = SafeWriter(_log_file)
+
 from typing import Set, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
@@ -244,6 +272,12 @@ async def telemetry_broadcast_loop():
 
 # Se os arquivos estáticos do React compilado existirem, serve na raiz
 dist_dir = os.path.join(os.path.dirname(__file__), "..", "client", "dist")
+if not os.path.exists(dist_dir) and getattr(sys, 'frozen', False):
+    meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    alt_dist = os.path.join(meipass, "client", "dist")
+    if os.path.exists(alt_dist):
+        dist_dir = alt_dist
+
 if os.path.exists(dist_dir):
     app.mount("/", StaticFiles(directory=dist_dir, html=True), name="static")
 
@@ -256,7 +290,7 @@ def start_server():
             "ssl_keyfile": KEY_FILE,
             "ssl_certfile": CERT_FILE,
         }
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning", **ssl_kwargs)
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=PORT, log_level="warning", log_config=None, **ssl_kwargs)
     server = uvicorn.Server(config)
     server.run()
 

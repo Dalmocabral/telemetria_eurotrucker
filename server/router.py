@@ -6,6 +6,7 @@ encaixe espacial (map-matching) do caminhão e resolução de destino por empres
 """
 
 import os
+import sys
 import json
 import math
 import array
@@ -77,7 +78,20 @@ class RoadRouter:
     def __init__(self, map_dir: Optional[str] = None):
         if not map_dir:
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            map_dir = os.path.join(base_dir, "..", "client", "public", "maps", "ets2")
+            candidate = os.path.join(base_dir, "..", "client", "public", "maps", "ets2")
+            if os.path.exists(candidate):
+                map_dir = candidate
+            else:
+                dist_candidate = os.path.join(base_dir, "..", "client", "dist", "maps", "ets2")
+                if os.path.exists(dist_candidate):
+                    map_dir = dist_candidate
+                elif getattr(sys, 'frozen', False):
+                    meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+                    alt1 = os.path.join(meipass, "client", "dist", "maps", "ets2")
+                    alt2 = os.path.join(meipass, "client", "public", "maps", "ets2")
+                    map_dir = alt1 if os.path.exists(alt1) else alt2
+                else:
+                    map_dir = candidate
 
         self.map_dir = os.path.abspath(map_dir)
         self.is_loaded = False
