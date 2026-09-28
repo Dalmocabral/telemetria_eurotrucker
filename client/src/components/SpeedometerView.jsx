@@ -77,8 +77,16 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
 
   const handleSelectSkin = (skinId) => {
     setCurrentSkinId(skinId);
-    localStorage.setItem('ets2_cluster_skin', skinId);
     setIsSkinModalOpen(false);
+  };
+
+  const [lastAutopilotToggle, setLastAutopilotToggle] = useState(0);
+
+  const handleToggleAutopilot = () => {
+    const now = Date.now();
+    if (now - lastAutopilotToggle < 500) return;
+    setLastAutopilotToggle(now);
+    handleAction('autopilot');
   };
 
   const handleAction = (actionName) => {
@@ -190,7 +198,7 @@ export default function SpeedometerView({ data, onSendAction, isMinimal = false 
         <button 
           id="btn-bot-autopilot"
           className={`btn-action-tile ${isAutoPilotOn ? 'tile-active-blue' : ''}`}
-          onClick={() => handleAction('autopilot')}
+          onClick={handleToggleAutopilot}
           title="Piloto Automático Inteligente por Placas (Acelera/Reduz conforme placas com Cruise ativo)"
         >
           <Gauge size={22} />
