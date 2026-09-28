@@ -48,6 +48,9 @@ export function usePwaInstall() {
     };
   }, []);
 
+  const isDesktop = !/android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   const installApp = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -57,13 +60,28 @@ export function usePwaInstall() {
         setIsInstallable(false);
       }
       setDeferredPrompt(null);
-    } else if (isIos) {
-      alert("Para instalar o TruckPilot Pro no seu iPhone ou iPad:\n1. Toque no botão de Compartilhar (ícone de quadrado com seta para cima no Safari)\n2. Role para baixo e selecione 'Adicionar à Tela de Início'.");
+      return;
     }
+
+    if (isIos) {
+      alert("📲 Para instalar no iPhone / iPad:\n\n1. Toque no botão de Compartilhar (ícone com seta para cima no Safari)\n2. Role para baixo e selecione 'Adicionar à Tela de Início'\n3. Pronto! O app abrirá em tela cheia.");
+      return;
+    }
+
+    if (!isLocalhost && isDesktop) {
+      const targetUrl = `http://localhost:${window.location.port || '8000'}`;
+      if (confirm(`💻 Para instalar como Aplicativo Oficial no Windows/Chrome:\n\nO Chrome exige que a instalação no PC seja feita pelo endereço localhost.\n\nDeseja abrir agora em ${targetUrl}?`)) {
+        window.location.href = targetUrl;
+      }
+      return;
+    }
+
+    // Android ou Desktop no localhost
+    alert("📱 Para instalar o TruckPilot Pro:\n\n1. Toque ou clique no menu de 3 pontinhos (⋮) do Google Chrome\n2. Selecione 'Instalar aplicativo' ou 'Adicionar à tela inicial'\n3. O TruckPilot Pro funcionará como um app nativo em tela cheia!");
   };
 
   return {
-    isInstallable: isInstallable || isIos,
+    isInstallable: !isInstalled,
     isInstalled,
     isIos,
     installApp,

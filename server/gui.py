@@ -412,7 +412,7 @@ class TelemetryServerApp(ctk.CTk):
         self.after(1000, self.update_status_loop)
 
     def open_browser(self):
-        webbrowser.open(f"http://{LOCAL_IP}:{PORT}")
+        webbrowser.open(f"http://localhost:{PORT}")
 
     def copy_url(self):
         self.clipboard_clear()
