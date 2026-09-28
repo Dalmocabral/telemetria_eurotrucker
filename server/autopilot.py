@@ -52,16 +52,21 @@ class AutoPilotManager:
                 speed = truck.get("speed", 0.0)
                 speed_limit = truck.get("speedLimit", 0.0)
                 cruise_on = truck.get("cruiseControl", False)
-                park_brake = truck.get("parkBrake", False)
+                rpm = truck.get("rpm", 0.0)
+                engine_on = bool(truck.get("engineOn", False) or rpm > 350 or not data.get("connected", True))
 
-                # Se puxar o freio de mão ou motor desligar, desativa por segurança
-                if park_brake or not truck.get("engineOn", False):
-                    if self.is_enabled:
-                        self.is_enabled = False
-                        print("[AutoPilot] Desativado automaticamente por segurança (Freio de mão / Motor).")
+                # Se o motor estiver desligado com o caminhão parado, apenas aguarda sem desativar a escolha do usuário
+                if not engine_on and speed < 2.0:
                     continue
 
-                # O Auto-Pilot exige que o Cruise Control do caminhão esteja ligado
+                # Se puxar o freio de mão em movimento (acima de 10 km/h), desativa por segurança
+                if park_brake and speed > 10.0:
+                    if self.is_enabled:
+                        self.is_enabled = False
+                        print("[AutoPilot] Desativado automaticamente por segurança (Freio de mão acionado em movimento).")
+                    continue
+
+                # O Auto-Pilot gerencia velocidade quando o Cruise Control estiver ligado
                 if not cruise_on:
                     continue
 

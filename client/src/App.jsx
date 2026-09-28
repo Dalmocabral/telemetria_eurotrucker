@@ -146,8 +146,9 @@ export default function App() {
     // 1. Envia via WebSocket se estiver ativo
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ action: actionName }));
+      return; // Garante disparo único
     }
-    // 2. Envia também via chamada HTTP rápida como garantia
+    // 2. Se o WebSocket não estiver conectado, usa chamada HTTP rápida como fallback
     const host = window.location.hostname || 'localhost';
     fetch(`http://${host}:8000/api/action/${actionName}`).catch(() => {});
   };
