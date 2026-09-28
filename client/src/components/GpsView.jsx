@@ -551,9 +551,18 @@ export default function GpsView({ data, isEmbedded = false }) {
           resizeObserver.observe(mapContainerRef.current);
         }
 
-        map.on('dragstart', () => {
-          setFollowTruck(false);
-        });
+        const handleUserGesture = (e) => {
+          // Desativa o travamento de câmera quando o usuário toca, dá zoom com dedos (pinch) ou arrasta o mapa
+          if (!e || e.originalEvent) {
+            setFollowTruck(false);
+          }
+        };
+
+        map.on('dragstart', handleUserGesture);
+        map.on('zoomstart', handleUserGesture);
+        map.on('rotatestart', handleUserGesture);
+        map.on('pitchstart', handleUserGesture);
+        map.on('touchstart', handleUserGesture);
 
         // Força resize após pequena espera para garantir layout estabilizado
         setTimeout(() => {
@@ -1027,6 +1036,29 @@ export default function GpsView({ data, isEmbedded = false }) {
             <small>KM/H</small>
           </div>
         </div>
+      )}
+
+      {/* 6.1 Botão Flutuante de Centralizar no Caminhão (quando usuário move o mapa ou usa pinch-to-zoom) */}
+      {!followTruck && (
+        <button 
+          id="btn-gps-recenter-float"
+          className="gps-floating-recenter-banner"
+          onClick={() => {
+            setFollowTruck(true);
+            if (mapInstanceRef.current && currentPosRef.current) {
+              mapInstanceRef.current.easeTo({
+                center: currentPosRef.current,
+                bearing: navMode === 'heading-up' ? currentHeadingRef.current : 0,
+                pitch: navMode === 'heading-up' ? 58 : 0,
+                duration: 450,
+              });
+            }
+          }}
+          title="Centralizar câmera no caminhão"
+        >
+          <Crosshair size={18} />
+          <span>Centralizar no Caminhão</span>
+        </button>
       )}
 
       {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária */}

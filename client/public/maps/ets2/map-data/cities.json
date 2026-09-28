@@ -17247,5 +17247,1661 @@
         "sectorY": -18
       }
     ]
+  },
+  {
+    "token": "akranes",
+    "name": "Akranes",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -91465.0,
+    "y": -101511.0,
+    "areas": []
+  },
+  {
+    "token": "akureyri",
+    "name": "Akureyri",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -77145.7,
+    "y": -101575.0,
+    "areas": []
+  },
+  {
+    "token": "alajarvi",
+    "name": "Alajärvi",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 39005.8,
+    "y": -70673.2,
+    "areas": []
+  },
+  {
+    "token": "andorra",
+    "name": "Andorra la Vella",
+    "countryToken": "andorra",
+    "population": 50000,
+    "x": -39815.9,
+    "y": 42009.7,
+    "areas": []
+  },
+  {
+    "token": "angers",
+    "name": "Angers",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -43531.5,
+    "y": 12968.1,
+    "areas": []
+  },
+  {
+    "token": "arad",
+    "name": "Arad",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 41265.9,
+    "y": 24603.7,
+    "areas": []
+  },
+  {
+    "token": "arnhem",
+    "name": "Arnhem",
+    "countryToken": "netherlands",
+    "population": 50000,
+    "x": -14732.1,
+    "y": -8798.42,
+    "areas": []
+  },
+  {
+    "token": "aurach",
+    "name": "Aurach",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -441.1,
+    "y": 8251.44,
+    "areas": []
+  },
+  {
+    "token": "bado",
+    "name": "Bad Oeynhausen",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -5724.91,
+    "y": -9493.73,
+    "areas": []
+  },
+  {
+    "token": "baiamare",
+    "name": "Baia Mare",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 49264.7,
+    "y": 15764.6,
+    "areas": []
+  },
+  {
+    "token": "balti",
+    "name": "Bălţi",
+    "countryToken": "moldova",
+    "population": 50000,
+    "x": 65823.7,
+    "y": 12512.0,
+    "areas": []
+  },
+  {
+    "token": "balvi",
+    "name": "Balvi",
+    "countryToken": "latvia",
+    "population": 50000,
+    "x": 53974.3,
+    "y": -39023.4,
+    "areas": []
+  },
+  {
+    "token": "basel",
+    "name": "Basel",
+    "countryToken": "switzerland",
+    "population": 50000,
+    "x": -11649.5,
+    "y": 17001.7,
+    "areas": []
+  },
+  {
+    "token": "bbiala",
+    "name": "Bielsko-Biała",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 31293.1,
+    "y": 5749.52,
+    "areas": []
+  },
+  {
+    "token": "birsay",
+    "name": "Birsay",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -38868.0,
+    "y": -69406.5,
+    "areas": []
+  },
+  {
+    "token": "blonduos",
+    "name": "Blönduós",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -82233.6,
+    "y": -104774.0,
+    "areas": []
+  },
+  {
+    "token": "bolungarvik",
+    "name": "Bolungarvík",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -87256.1,
+    "y": -112100.0,
+    "areas": []
+  },
+  {
+    "token": "borde",
+    "name": "Bordeaux",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -47905.3,
+    "y": 27492.5,
+    "areas": []
+  },
+  {
+    "token": "borgarnes",
+    "name": "Borgarnes",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -89285.6,
+    "y": -102462.0,
+    "areas": []
+  },
+  {
+    "token": "bremerhaven",
+    "name": "Bremerhaven",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -5715.6,
+    "y": -16976.6,
+    "areas": []
+  },
+  {
+    "token": "broadford",
+    "name": "Broadford",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -53239.6,
+    "y": -59401.6,
+    "areas": []
+  },
+  {
+    "token": "burg",
+    "name": "Burg a. Fehmarn",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": 4095.55,
+    "y": -21142.2,
+    "areas": []
+  },
+  {
+    "token": "bydgoszcz",
+    "name": "Bydgoszcz",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 26440.3,
+    "y": -13850.1,
+    "areas": []
+  },
+  {
+    "token": "caen",
+    "name": "Caen",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -40904.6,
+    "y": 3042.14,
+    "areas": []
+  },
+  {
+    "token": "chelmsford",
+    "name": "Chelmsford",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -36472.1,
+    "y": -12878.6,
+    "areas": []
+  },
+  {
+    "token": "cherb",
+    "name": "Cherbourg",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -45091.8,
+    "y": -447.96,
+    "areas": []
+  },
+  {
+    "token": "chisinau",
+    "name": "Chişinău",
+    "countryToken": "moldova",
+    "population": 50000,
+    "x": 70134.7,
+    "y": 16235.3,
+    "areas": []
+  },
+  {
+    "token": "cieszyn",
+    "name": "Cieszyn",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 29295.3,
+    "y": 6348.3,
+    "areas": []
+  },
+  {
+    "token": "cluj",
+    "name": "Cluj-Napoca",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 49554.8,
+    "y": 20421.1,
+    "areas": []
+  },
+  {
+    "token": "croydon",
+    "name": "Croydon",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -39570.6,
+    "y": -10454.6,
+    "areas": []
+  },
+  {
+    "token": "donostia",
+    "name": "San Sebastian/Donostia",
+    "countryToken": "spain",
+    "population": 50000,
+    "x": -53789.7,
+    "y": 34870.4,
+    "areas": []
+  },
+  {
+    "token": "douglas",
+    "name": "Douglas",
+    "countryToken": "iom",
+    "population": 50000,
+    "x": -54292.5,
+    "y": -35572.3,
+    "areas": []
+  },
+  {
+    "token": "europoort",
+    "name": "Europoort",
+    "countryToken": "netherlands",
+    "population": 50000,
+    "x": -21791.1,
+    "y": -8987.42,
+    "areas": []
+  },
+  {
+    "token": "evie",
+    "name": "Evie",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -38532.4,
+    "y": -69291.6,
+    "areas": []
+  },
+  {
+    "token": "flensburg",
+    "name": "Flensburg",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -780.34,
+    "y": -22997.3,
+    "areas": []
+  },
+  {
+    "token": "ftwilliam",
+    "name": "Fort William",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -50854.3,
+    "y": -56132.7,
+    "areas": []
+  },
+  {
+    "token": "furth",
+    "name": "Fürth",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": 1249.49,
+    "y": 5970.42,
+    "areas": []
+  },
+  {
+    "token": "gdynia",
+    "name": "Gdynia",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 28154.4,
+    "y": -22045.9,
+    "areas": []
+  },
+  {
+    "token": "gorzow",
+    "name": "Gorzów Wlkp.",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 17502.4,
+    "y": -11074.3,
+    "areas": []
+  },
+  {
+    "token": "groedig",
+    "name": "Grödig",
+    "countryToken": "austria",
+    "population": 50000,
+    "x": 8008.66,
+    "y": 16688.1,
+    "areas": []
+  },
+  {
+    "token": "grudziadz",
+    "name": "Grudziądz",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 31238.0,
+    "y": -16550.4,
+    "areas": []
+  },
+  {
+    "token": "gulbene",
+    "name": "Gulbene",
+    "countryToken": "latvia",
+    "population": 50000,
+    "x": 52449.3,
+    "y": -39194.3,
+    "areas": []
+  },
+  {
+    "token": "haapsalu",
+    "name": "Haapsalu",
+    "countryToken": "estonia",
+    "population": 50000,
+    "x": 41258.4,
+    "y": -47857.6,
+    "areas": []
+  },
+  {
+    "token": "halle",
+    "name": "Halle (Saale)",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": 5833.82,
+    "y": -5407.88,
+    "areas": []
+  },
+  {
+    "token": "hameenlinna",
+    "name": "Hämeenlinna",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 42545.3,
+    "y": -59899.2,
+    "areas": []
+  },
+  {
+    "token": "havre",
+    "name": "Le Havre",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -38340.7,
+    "y": 1479.85,
+    "areas": []
+  },
+  {
+    "token": "heilbronn",
+    "name": "Heilbronn",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -6325.54,
+    "y": 8009.55,
+    "areas": []
+  },
+  {
+    "token": "herning",
+    "name": "Herning",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": -3455.63,
+    "y": -30797.0,
+    "areas": []
+  },
+  {
+    "token": "hofn",
+    "name": "Höfn",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -73990.5,
+    "y": -88514.8,
+    "areas": []
+  },
+  {
+    "token": "holmavik",
+    "name": "Hólmavík",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -84765.7,
+    "y": -106902.0,
+    "areas": []
+  },
+  {
+    "token": "holstebro",
+    "name": "Holstebro",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": -3816.61,
+    "y": -32659.8,
+    "areas": []
+  },
+  {
+    "token": "hull",
+    "name": "Hull",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -35543.9,
+    "y": -29239.1,
+    "areas": []
+  },
+  {
+    "token": "ijmuiden",
+    "name": "IJmuiden",
+    "countryToken": "netherlands",
+    "population": 50000,
+    "x": -19700.3,
+    "y": -12077.1,
+    "areas": []
+  },
+  {
+    "token": "inverness",
+    "name": "Inverness",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -46444.2,
+    "y": -59141.8,
+    "areas": []
+  },
+  {
+    "token": "irun",
+    "name": "Irun",
+    "countryToken": "spain",
+    "population": 50000,
+    "x": -52725.0,
+    "y": 35051.0,
+    "areas": []
+  },
+  {
+    "token": "isafjordur",
+    "name": "Ísafjörður",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -87022.4,
+    "y": -111213.0,
+    "areas": []
+  },
+  {
+    "token": "jonquera",
+    "name": "La Jonquera",
+    "countryToken": "spain",
+    "population": 50000,
+    "x": -33815.4,
+    "y": 44330.0,
+    "areas": []
+  },
+  {
+    "token": "kardla",
+    "name": "Kärdla",
+    "countryToken": "estonia",
+    "population": 50000,
+    "x": 39138.0,
+    "y": -47985.5,
+    "areas": []
+  },
+  {
+    "token": "karsamaki",
+    "name": "Kärsämäki",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 43370.3,
+    "y": -77032.8,
+    "areas": []
+  },
+  {
+    "token": "keflavik",
+    "name": "Keflavík Airport",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -94118.3,
+    "y": -98004.0,
+    "areas": []
+  },
+  {
+    "token": "kemi",
+    "name": "Kemi",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 44421.9,
+    "y": -92994.8,
+    "areas": []
+  },
+  {
+    "token": "kielce",
+    "name": "Kielce",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 36896.1,
+    "y": -1011.63,
+    "areas": []
+  },
+  {
+    "token": "kirkenes",
+    "name": "Kirkenes",
+    "countryToken": "norway",
+    "population": 50000,
+    "x": 44536.5,
+    "y": -108965.0,
+    "areas": []
+  },
+  {
+    "token": "kirkwall",
+    "name": "Kirkwall",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -38213.7,
+    "y": -68910.3,
+    "areas": []
+  },
+  {
+    "token": "klaksvik",
+    "name": "Klaksvík",
+    "countryToken": "faroe",
+    "population": 50000,
+    "x": -49964.0,
+    "y": -83155.7,
+    "areas": []
+  },
+  {
+    "token": "kolding",
+    "name": "Kolding",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": -1459.68,
+    "y": -27181.4,
+    "areas": []
+  },
+  {
+    "token": "koszalin",
+    "name": "Koszalin",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 20321.5,
+    "y": -19548.9,
+    "areas": []
+  },
+  {
+    "token": "krafla",
+    "name": "Krafla",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -72508.4,
+    "y": -99684.3,
+    "areas": []
+  },
+  {
+    "token": "kristianstad",
+    "name": "Kristianstad",
+    "countryToken": "sweden",
+    "population": 50000,
+    "x": 13704.1,
+    "y": -29967.9,
+    "areas": []
+  },
+  {
+    "token": "kristiinank",
+    "name": "Kristiinankaupunki",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 32474.3,
+    "y": -66055.6,
+    "areas": []
+  },
+  {
+    "token": "krosno",
+    "name": "Krosno",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 40842.8,
+    "y": 4645.48,
+    "areas": []
+  },
+  {
+    "token": "kuressaare",
+    "name": "Kuressaare",
+    "countryToken": "estonia",
+    "population": 50000,
+    "x": 38652.6,
+    "y": -43361.0,
+    "areas": []
+  },
+  {
+    "token": "longyearbyen",
+    "name": "Longyearbyen",
+    "countryToken": "norway",
+    "population": 50000,
+    "x": 19567.1,
+    "y": -180806.0,
+    "areas": []
+  },
+  {
+    "token": "lorient",
+    "name": "Lorient",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -54828.6,
+    "y": 8687.19,
+    "areas": []
+  },
+  {
+    "token": "manresa",
+    "name": "Manresa",
+    "countryToken": "spain",
+    "population": 50000,
+    "x": -39339.8,
+    "y": 46488.6,
+    "areas": []
+  },
+  {
+    "token": "mans",
+    "name": "Le Mans",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -40038.6,
+    "y": 10523.9,
+    "areas": []
+  },
+  {
+    "token": "modena",
+    "name": "Modena",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 75.46,
+    "y": 34539.4,
+    "areas": []
+  },
+  {
+    "token": "moskushamn",
+    "name": "Moskushamn",
+    "countryToken": "norway",
+    "population": 50000,
+    "x": 20558.7,
+    "y": -181799.0,
+    "areas": []
+  },
+  {
+    "token": "mukacheve",
+    "name": "Мукачеве (Mukacheve)",
+    "countryToken": "ukraine",
+    "population": 50000,
+    "x": 45497.1,
+    "y": 11834.6,
+    "areas": []
+  },
+  {
+    "token": "murmansk",
+    "name": "Мурманск (Murmansk)",
+    "countryToken": "russia",
+    "population": 50000,
+    "x": 53970.5,
+    "y": -105283.0,
+    "areas": []
+  },
+  {
+    "token": "napapiiri",
+    "name": "Napapiiri",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 41580.4,
+    "y": -92240.3,
+    "areas": []
+  },
+  {
+    "token": "narbonne",
+    "name": "Narbonne",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -33667.0,
+    "y": 38783.3,
+    "areas": []
+  },
+  {
+    "token": "nikel",
+    "name": "Никель (Nikel)",
+    "countryToken": "russia",
+    "population": 50000,
+    "x": 46367.6,
+    "y": -105017.0,
+    "areas": []
+  },
+  {
+    "token": "nowogard",
+    "name": "Nowogard",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 17888.8,
+    "y": -16557.9,
+    "areas": []
+  },
+  {
+    "token": "oban",
+    "name": "Oban",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -53420.4,
+    "y": -53472.1,
+    "areas": []
+  },
+  {
+    "token": "oberhausen",
+    "name": "Oberhausen",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -11793.2,
+    "y": -5322.95,
+    "areas": []
+  },
+  {
+    "token": "opole",
+    "name": "Opole",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 27536.9,
+    "y": -679.39,
+    "areas": []
+  },
+  {
+    "token": "oradea",
+    "name": "Oradea",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 43493.9,
+    "y": 19439.1,
+    "areas": []
+  },
+  {
+    "token": "orlea",
+    "name": "Orléans",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -33526.4,
+    "y": 11781.6,
+    "areas": []
+  },
+  {
+    "token": "ostroleka",
+    "name": "Ostrołęka",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 38890.4,
+    "y": -14259.3,
+    "areas": []
+  },
+  {
+    "token": "padborg",
+    "name": "Padborg",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": -1608.62,
+    "y": -24340.2,
+    "areas": []
+  },
+  {
+    "token": "pau",
+    "name": "Pau",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -47944.2,
+    "y": 36082.7,
+    "areas": []
+  },
+  {
+    "token": "perpignan",
+    "name": "Perpignan",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -34520.9,
+    "y": 41436.8,
+    "areas": []
+  },
+  {
+    "token": "piatra",
+    "name": "Piatra Neamţ",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 59773.0,
+    "y": 17823.8,
+    "areas": []
+  },
+  {
+    "token": "pila",
+    "name": "Piła",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 21276.1,
+    "y": -14380.2,
+    "areas": []
+  },
+  {
+    "token": "plock",
+    "name": "Płock",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 32393.4,
+    "y": -10665.9,
+    "areas": []
+  },
+  {
+    "token": "poitiers",
+    "name": "Poitiers",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -41108.0,
+    "y": 18442.8,
+    "areas": []
+  },
+  {
+    "token": "portree",
+    "name": "Portree",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -53845.9,
+    "y": -61021.8,
+    "areas": []
+  },
+  {
+    "token": "portsmouth",
+    "name": "Portsmouth",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -43034.2,
+    "y": -5752.09,
+    "areas": []
+  },
+  {
+    "token": "porvoo",
+    "name": "Porvoo",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 47431.8,
+    "y": -57017.7,
+    "areas": []
+  },
+  {
+    "token": "przemysl",
+    "name": "Przemyśl",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 44670.6,
+    "y": 3973.53,
+    "areas": []
+  },
+  {
+    "token": "puttgarden",
+    "name": "Puttgarden",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": 4001.17,
+    "y": -21612.7,
+    "areas": []
+  },
+  {
+    "token": "radom",
+    "name": "Radom",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 38543.6,
+    "y": -4837.94,
+    "areas": []
+  },
+  {
+    "token": "ramsey",
+    "name": "Ramsey",
+    "countryToken": "iom",
+    "population": 50000,
+    "x": -53660.9,
+    "y": -36755.5,
+    "areas": []
+  },
+  {
+    "token": "renne",
+    "name": "Rennes",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -48307.4,
+    "y": 8223.08,
+    "areas": []
+  },
+  {
+    "token": "reydar",
+    "name": "Reyðarfjörður",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -69235.1,
+    "y": -92368.9,
+    "areas": []
+  },
+  {
+    "token": "reykjavik",
+    "name": "Reykjavík",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -90723.9,
+    "y": -98482.6,
+    "areas": []
+  },
+  {
+    "token": "rodbyhavn",
+    "name": "Rødbyhavn",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": 4378.43,
+    "y": -22326.5,
+    "areas": []
+  },
+  {
+    "token": "rouen",
+    "name": "Rouen",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -34886.4,
+    "y": 2583.58,
+    "areas": []
+  },
+  {
+    "token": "rzeszow",
+    "name": "Rzeszów",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 42993.9,
+    "y": 2919.09,
+    "areas": []
+  },
+  {
+    "token": "sanok",
+    "name": "Sanok",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 43027.8,
+    "y": 5134.43,
+    "areas": []
+  },
+  {
+    "token": "selfoss",
+    "name": "Selfoss",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -89796.2,
+    "y": -95809.1,
+    "areas": []
+  },
+  {
+    "token": "seydis",
+    "name": "Seyðisfjörður",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -68112.5,
+    "y": -93717.5,
+    "areas": []
+  },
+  {
+    "token": "sibiu",
+    "name": "Sibiu",
+    "countryToken": "romania",
+    "population": 50000,
+    "x": 52251.6,
+    "y": 26325.7,
+    "areas": []
+  },
+  {
+    "token": "siedlce",
+    "name": "Siedlce",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 41651.7,
+    "y": -9261.17,
+    "areas": []
+  },
+  {
+    "token": "soderhamn",
+    "name": "Söderhamn",
+    "countryToken": "sweden",
+    "population": 50000,
+    "x": 21956.2,
+    "y": -59633.3,
+    "areas": []
+  },
+  {
+    "token": "sthelier",
+    "name": "St Helier",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -47502.3,
+    "y": 2063.23,
+    "areas": []
+  },
+  {
+    "token": "stromness",
+    "name": "Stromness",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -39126.5,
+    "y": -68742.7,
+    "areas": []
+  },
+  {
+    "token": "suwalki",
+    "name": "Suwałki",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 43448.6,
+    "y": -21045.2,
+    "areas": []
+  },
+  {
+    "token": "swinoujscie",
+    "name": "Świnoujście",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 13488.7,
+    "y": -17184.3,
+    "areas": []
+  },
+  {
+    "token": "thurso",
+    "name": "Thurso",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -41731.6,
+    "y": -66122.4,
+    "areas": []
+  },
+  {
+    "token": "torshavn",
+    "name": "Tórshavn",
+    "countryToken": "faroe",
+    "population": 50000,
+    "x": -51298.5,
+    "y": -81483.6,
+    "areas": []
+  },
+  {
+    "token": "tours",
+    "name": "Tours",
+    "countryToken": "france",
+    "population": 50000,
+    "x": -38487.6,
+    "y": 14301.3,
+    "areas": []
+  },
+  {
+    "token": "trinity",
+    "name": "Trinity",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -47726.4,
+    "y": 1242.87,
+    "areas": []
+  },
+  {
+    "token": "tukums",
+    "name": "Tukums",
+    "countryToken": "latvia",
+    "population": 50000,
+    "x": 41200.5,
+    "y": -37187.2,
+    "areas": []
+  },
+  {
+    "token": "ulm",
+    "name": "Ulm",
+    "countryToken": "germany",
+    "population": 50000,
+    "x": -2928.57,
+    "y": 12657.0,
+    "areas": []
+  },
+  {
+    "token": "uzhhorod",
+    "name": "Ужгород (Uzhhorod)",
+    "countryToken": "ukraine",
+    "population": 50000,
+    "x": 43781.0,
+    "y": 11200.1,
+    "areas": []
+  },
+  {
+    "token": "vaduz",
+    "name": "Vaduz",
+    "countryToken": "liecht",
+    "population": 50000,
+    "x": -3865.21,
+    "y": 18906.6,
+    "areas": []
+  },
+  {
+    "token": "valga",
+    "name": "Valga",
+    "countryToken": "estonia",
+    "population": 50000,
+    "x": 49770.1,
+    "y": -42978.1,
+    "areas": []
+  },
+  {
+    "token": "valka",
+    "name": "Valka",
+    "countryToken": "latvia",
+    "population": 50000,
+    "x": 49463.9,
+    "y": -42752.1,
+    "areas": []
+  },
+  {
+    "token": "vantaa",
+    "name": "Vantaa",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 45004.3,
+    "y": -56661.7,
+    "areas": []
+  },
+  {
+    "token": "varkaus",
+    "name": "Varkaus",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 50510.6,
+    "y": -68975.5,
+    "areas": []
+  },
+  {
+    "token": "viborg",
+    "name": "Viborg",
+    "countryToken": "denmark",
+    "population": 50000,
+    "x": -1033.26,
+    "y": -33233.7,
+    "areas": []
+  },
+  {
+    "token": "vicenza",
+    "name": "Vicenza",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 3032.82,
+    "y": 29533.5,
+    "areas": []
+  },
+  {
+    "token": "viitasaari",
+    "name": "Viitasaari",
+    "countryToken": "finland",
+    "population": 50000,
+    "x": 44214.6,
+    "y": -72353.1,
+    "areas": []
+  },
+  {
+    "token": "vik",
+    "name": "Vík",
+    "countryToken": "iceland",
+    "population": 50000,
+    "x": -86702.3,
+    "y": -89729.3,
+    "areas": []
+  },
+  {
+    "token": "wick",
+    "name": "Wick",
+    "countryToken": "uk",
+    "population": 50000,
+    "x": -39662.3,
+    "y": -64980.1,
+    "areas": []
+  },
+  {
+    "token": "zamosc",
+    "name": "Zamość",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 46167.3,
+    "y": -1538.1,
+    "areas": []
+  },
+  {
+    "token": "zelenogradsk",
+    "name": "Зеленоградск (Zelenogradsk)",
+    "countryToken": "russia",
+    "population": 50000,
+    "x": 34230.9,
+    "y": -24320.9,
+    "areas": []
+  },
+  {
+    "token": "zgorzelec",
+    "name": "Zgorzelec",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 16779.7,
+    "y": -1715.38,
+    "areas": []
+  },
+  {
+    "token": "zwolle",
+    "name": "Zwolle",
+    "countryToken": "netherlands",
+    "population": 50000,
+    "x": -14526.0,
+    "y": -12292.1,
+    "areas": []
+  },
+  {
+    "token": "gdyne",
+    "name": "Gdynia",
+    "countryToken": "poland",
+    "population": 50000,
+    "x": 28154.4,
+    "y": -22045.9,
+    "areas": []
+  },
+  {
+    "token": "aquila",
+    "name": "L'Aquila",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 10098.9,
+    "y": 46803.9,
+    "areas": []
+  },
+  {
+    "token": "catanz",
+    "name": "Catanzaro",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 23154.8,
+    "y": 66889.7,
+    "areas": []
+  },
+  {
+    "token": "civitavec",
+    "name": "Civitavecchia",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 3124.0,
+    "y": 48749.1,
+    "areas": []
+  },
+  {
+    "token": "crotone",
+    "name": "Crotone",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 25677.5,
+    "y": 65250.7,
+    "areas": []
+  },
+  {
+    "token": "enna",
+    "name": "Enna",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 12818.1,
+    "y": 74267.5,
+    "areas": []
+  },
+  {
+    "token": "foggia",
+    "name": "Foggia",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 18927.3,
+    "y": 52413.7,
+    "areas": []
+  },
+  {
+    "token": "imola",
+    "name": "Imola",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 3285.87,
+    "y": 35401.5,
+    "areas": []
+  },
+  {
+    "token": "laspezia",
+    "name": "La Spezia",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": -5183.63,
+    "y": 37196.4,
+    "areas": []
+  },
+  {
+    "token": "latina",
+    "name": "Latina",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 7571.98,
+    "y": 52219.6,
+    "areas": []
+  },
+  {
+    "token": "lecce",
+    "name": "Lecce",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 30077.0,
+    "y": 58629.2,
+    "areas": []
+  },
+  {
+    "token": "lucca",
+    "name": "Lucca",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": -1316.87,
+    "y": 38411.4,
+    "areas": []
+  },
+  {
+    "token": "oristano",
+    "name": "Oristano",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": -11619.1,
+    "y": 59839.6,
+    "areas": []
+  },
+  {
+    "token": "perugia",
+    "name": "Perugia",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 5484.8,
+    "y": 42625.8,
+    "areas": []
+  },
+  {
+    "token": "pisa",
+    "name": "Pisa",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": -2296.73,
+    "y": 39358.6,
+    "areas": []
+  },
+  {
+    "token": "potenza",
+    "name": "Potenza",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 19793.2,
+    "y": 57224.2,
+    "areas": []
+  },
+  {
+    "token": "ravenna",
+    "name": "Ravenna",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 5416.85,
+    "y": 35514.5,
+    "areas": []
+  },
+  {
+    "token": "reggio",
+    "name": "Reggio",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 20164.5,
+    "y": 72275.1,
+    "areas": []
+  },
+  {
+    "token": "siena",
+    "name": "Siena",
+    "countryToken": "italy",
+    "population": 50000,
+    "x": 1194.18,
+    "y": 41722.3,
+    "areas": []
+  },
+  {
+    "token": "atyrau",
+    "name": "Atyrau",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 161288.0,
+    "y": -759.52,
+    "areas": []
+  },
+  {
+    "token": "dossor",
+    "name": "Dossor",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 166625.0,
+    "y": -2713.12,
+    "areas": []
+  },
+  {
+    "token": "furmanovo",
+    "name": "Furmanovo",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 147738.0,
+    "y": -25399.4,
+    "areas": []
+  },
+  {
+    "token": "inderborsky",
+    "name": "Inderborsky",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 161991.0,
+    "y": -9071.86,
+    "areas": []
+  },
+  {
+    "token": "kulsari",
+    "name": "Kulsari",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 171634.0,
+    "y": 359.63,
+    "areas": []
+  },
+  {
+    "token": "lubenka",
+    "name": "Lubenka",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 172131.0,
+    "y": -20870.1,
+    "areas": []
+  },
+  {
+    "token": "makat",
+    "name": "Makat",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 168706.0,
+    "y": -3459.58,
+    "areas": []
+  },
+  {
+    "token": "uralsk",
+    "name": "Uralsk",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 158495.0,
+    "y": -24950.6,
+    "areas": []
+  },
+  {
+    "token": "vzletnyy",
+    "name": "Vzletnyy",
+    "countryToken": "russia",
+    "population": 50000,
+    "x": 137243.0,
+    "y": -27391.7,
+    "areas": []
+  },
+  {
+    "token": "zhympity",
+    "name": "Zhympity",
+    "countryToken": "kazakhstan",
+    "population": 50000,
+    "x": 165239.0,
+    "y": -19368.3,
+    "areas": []
+  },
+  {
+    "token": "billings",
+    "name": "Billings",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -48677.9,
+    "y": -42375.1,
+    "areas": []
+  },
+  {
+    "token": "bozeman",
+    "name": "Bozeman",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -59779.1,
+    "y": -42966.3,
+    "areas": []
+  },
+  {
+    "token": "butte",
+    "name": "Butte",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -64788.6,
+    "y": -45335.3,
+    "areas": []
+  },
+  {
+    "token": "glasgow_mt",
+    "name": "Glasgow",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -40268.7,
+    "y": -54673.6,
+    "areas": []
+  },
+  {
+    "token": "glendive",
+    "name": "Glendive",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -33819.1,
+    "y": -47322.6,
+    "areas": []
+  },
+  {
+    "token": "great_falls",
+    "name": "Great Falls",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -57882.9,
+    "y": -54597.5,
+    "areas": []
+  },
+  {
+    "token": "helena",
+    "name": "Helena",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -61403.9,
+    "y": -49028.7,
+    "areas": []
+  },
+  {
+    "token": "kalispell",
+    "name": "Kalispell",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -69691.6,
+    "y": -59999.2,
+    "areas": []
+  },
+  {
+    "token": "laurel",
+    "name": "Laurel",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -50371.4,
+    "y": -40981.6,
+    "areas": []
+  },
+  {
+    "token": "lewistown",
+    "name": "Lewistown",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -51777.8,
+    "y": -49878.1,
+    "areas": []
+  },
+  {
+    "token": "miles_city",
+    "name": "Miles City",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -38197.5,
+    "y": -45381.5,
+    "areas": []
+  },
+  {
+    "token": "missoula",
+    "name": "Missoula",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -69914.2,
+    "y": -52575.5,
+    "areas": []
+  },
+  {
+    "token": "sidney",
+    "name": "Sidney",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -31754.0,
+    "y": -51097.8,
+    "areas": []
+  },
+  {
+    "token": "thompson_f",
+    "name": "Thompson Falls",
+    "countryToken": "montana",
+    "population": 50000,
+    "x": -72525.9,
+    "y": -56488.5,
+    "areas": []
   }
 ]

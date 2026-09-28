@@ -1,6 +1,7 @@
 /**
- * Banco completo de todas as 374 cidades do Euro Truck Simulator 2.
- * Coordenadas X e Z calibradas com o sistema de coordenadas e telemetria da SCS.
+ * Banco completo de cidades do Euro Truck Simulator 2 (Vanilla + DLCs + ProMods).
+ * Coordenadas X e Z calibradas com o sistema de telemetria da SCS.
+ * Total de cidades: 559
  */
 
 export const ETS2_ALL_CITIES = [
@@ -51,7 +52,7 @@ export const ETS2_ALL_CITIES = [
     "name": "Birmingham",
     "country": "uk",
     "x": -45951.12,
-    "z": -20443
+    "z": -20443.0
   },
   {
     "token": "bratislava",
@@ -618,7 +619,7 @@ export const ETS2_ALL_CITIES = [
     "name": "Galați",
     "country": "romania",
     "x": 67046.16,
-    "z": 24453
+    "z": 24453.0
   },
   {
     "token": "hunedoara",
@@ -1079,7 +1080,7 @@ export const ETS2_ALL_CITIES = [
     "token": "paldiski",
     "name": "Paldiski",
     "country": "estonia",
-    "x": 42570,
+    "x": 42570.0,
     "z": -50031.95
   },
   {
@@ -1128,7 +1129,7 @@ export const ETS2_ALL_CITIES = [
     "token": "riga",
     "name": "Riga",
     "country": "latvia",
-    "x": 44678,
+    "x": 44678.0,
     "z": -37109.68
   },
   {
@@ -1759,7 +1760,7 @@ export const ETS2_ALL_CITIES = [
     "name": "Granada",
     "country": "spain",
     "x": -70181.96,
-    "z": 66082
+    "z": 66082.0
   },
   {
     "token": "guarda",
@@ -1808,7 +1809,7 @@ export const ETS2_ALL_CITIES = [
     "name": "Málaga",
     "country": "spain",
     "x": -73044.19,
-    "z": 68810
+    "z": 68810.0
   },
   {
     "token": "mengibar",
@@ -2627,90 +2628,1294 @@ export const ETS2_ALL_CITIES = [
     "name": "Vaasa",
     "country": "finland",
     "x": 32998.32,
-    "z": -71037
+    "z": -71037.0
+  },
+  {
+    "token": "akranes",
+    "name": "Akranes",
+    "country": "iceland",
+    "x": -91465.0,
+    "z": -101511.0
+  },
+  {
+    "token": "akureyri",
+    "name": "Akureyri",
+    "country": "iceland",
+    "x": -77145.7,
+    "z": -101575.0
+  },
+  {
+    "token": "alajarvi",
+    "name": "Alajärvi",
+    "country": "finland",
+    "x": 39005.8,
+    "z": -70673.2
+  },
+  {
+    "token": "andorra",
+    "name": "Andorra la Vella",
+    "country": "andorra",
+    "x": -39815.9,
+    "z": 42009.7
+  },
+  {
+    "token": "angers",
+    "name": "Angers",
+    "country": "france",
+    "x": -43531.5,
+    "z": 12968.1
+  },
+  {
+    "token": "arad",
+    "name": "Arad",
+    "country": "romania",
+    "x": 41265.9,
+    "z": 24603.7
+  },
+  {
+    "token": "arnhem",
+    "name": "Arnhem",
+    "country": "netherlands",
+    "x": -14732.1,
+    "z": -8798.42
+  },
+  {
+    "token": "aurach",
+    "name": "Aurach",
+    "country": "germany",
+    "x": -441.1,
+    "z": 8251.44
+  },
+  {
+    "token": "bado",
+    "name": "Bad Oeynhausen",
+    "country": "germany",
+    "x": -5724.91,
+    "z": -9493.73
+  },
+  {
+    "token": "baiamare",
+    "name": "Baia Mare",
+    "country": "romania",
+    "x": 49264.7,
+    "z": 15764.6
+  },
+  {
+    "token": "balti",
+    "name": "Bălţi",
+    "country": "moldova",
+    "x": 65823.7,
+    "z": 12512.0
+  },
+  {
+    "token": "balvi",
+    "name": "Balvi",
+    "country": "latvia",
+    "x": 53974.3,
+    "z": -39023.4
+  },
+  {
+    "token": "basel",
+    "name": "Basel",
+    "country": "switzerland",
+    "x": -11649.5,
+    "z": 17001.7
+  },
+  {
+    "token": "bbiala",
+    "name": "Bielsko-Biała",
+    "country": "poland",
+    "x": 31293.1,
+    "z": 5749.52
+  },
+  {
+    "token": "birsay",
+    "name": "Birsay",
+    "country": "uk",
+    "x": -38868.0,
+    "z": -69406.5
+  },
+  {
+    "token": "blonduos",
+    "name": "Blönduós",
+    "country": "iceland",
+    "x": -82233.6,
+    "z": -104774.0
+  },
+  {
+    "token": "bolungarvik",
+    "name": "Bolungarvík",
+    "country": "iceland",
+    "x": -87256.1,
+    "z": -112100.0
+  },
+  {
+    "token": "borde",
+    "name": "Bordeaux",
+    "country": "france",
+    "x": -47905.3,
+    "z": 27492.5
+  },
+  {
+    "token": "borgarnes",
+    "name": "Borgarnes",
+    "country": "iceland",
+    "x": -89285.6,
+    "z": -102462.0
+  },
+  {
+    "token": "bremerhaven",
+    "name": "Bremerhaven",
+    "country": "germany",
+    "x": -5715.6,
+    "z": -16976.6
+  },
+  {
+    "token": "broadford",
+    "name": "Broadford",
+    "country": "uk",
+    "x": -53239.6,
+    "z": -59401.6
+  },
+  {
+    "token": "burg",
+    "name": "Burg a. Fehmarn",
+    "country": "germany",
+    "x": 4095.55,
+    "z": -21142.2
+  },
+  {
+    "token": "bydgoszcz",
+    "name": "Bydgoszcz",
+    "country": "poland",
+    "x": 26440.3,
+    "z": -13850.1
+  },
+  {
+    "token": "caen",
+    "name": "Caen",
+    "country": "france",
+    "x": -40904.6,
+    "z": 3042.14
+  },
+  {
+    "token": "chelmsford",
+    "name": "Chelmsford",
+    "country": "uk",
+    "x": -36472.1,
+    "z": -12878.6
+  },
+  {
+    "token": "cherb",
+    "name": "Cherbourg",
+    "country": "france",
+    "x": -45091.8,
+    "z": -447.96
+  },
+  {
+    "token": "chisinau",
+    "name": "Chişinău",
+    "country": "moldova",
+    "x": 70134.7,
+    "z": 16235.3
+  },
+  {
+    "token": "cieszyn",
+    "name": "Cieszyn",
+    "country": "poland",
+    "x": 29295.3,
+    "z": 6348.3
+  },
+  {
+    "token": "cluj",
+    "name": "Cluj-Napoca",
+    "country": "romania",
+    "x": 49554.8,
+    "z": 20421.1
+  },
+  {
+    "token": "croydon",
+    "name": "Croydon",
+    "country": "uk",
+    "x": -39570.6,
+    "z": -10454.6
+  },
+  {
+    "token": "donostia",
+    "name": "San Sebastian/Donostia",
+    "country": "spain",
+    "x": -53789.7,
+    "z": 34870.4
+  },
+  {
+    "token": "douglas",
+    "name": "Douglas",
+    "country": "iom",
+    "x": -54292.5,
+    "z": -35572.3
+  },
+  {
+    "token": "europoort",
+    "name": "Europoort",
+    "country": "netherlands",
+    "x": -21791.1,
+    "z": -8987.42
+  },
+  {
+    "token": "evie",
+    "name": "Evie",
+    "country": "uk",
+    "x": -38532.4,
+    "z": -69291.6
+  },
+  {
+    "token": "flensburg",
+    "name": "Flensburg",
+    "country": "germany",
+    "x": -780.34,
+    "z": -22997.3
+  },
+  {
+    "token": "ftwilliam",
+    "name": "Fort William",
+    "country": "uk",
+    "x": -50854.3,
+    "z": -56132.7
+  },
+  {
+    "token": "furth",
+    "name": "Fürth",
+    "country": "germany",
+    "x": 1249.49,
+    "z": 5970.42
+  },
+  {
+    "token": "gdynia",
+    "name": "Gdynia",
+    "country": "poland",
+    "x": 28154.4,
+    "z": -22045.9
+  },
+  {
+    "token": "gorzow",
+    "name": "Gorzów Wlkp.",
+    "country": "poland",
+    "x": 17502.4,
+    "z": -11074.3
+  },
+  {
+    "token": "groedig",
+    "name": "Grödig",
+    "country": "austria",
+    "x": 8008.66,
+    "z": 16688.1
+  },
+  {
+    "token": "grudziadz",
+    "name": "Grudziądz",
+    "country": "poland",
+    "x": 31238.0,
+    "z": -16550.4
+  },
+  {
+    "token": "gulbene",
+    "name": "Gulbene",
+    "country": "latvia",
+    "x": 52449.3,
+    "z": -39194.3
+  },
+  {
+    "token": "haapsalu",
+    "name": "Haapsalu",
+    "country": "estonia",
+    "x": 41258.4,
+    "z": -47857.6
+  },
+  {
+    "token": "halle",
+    "name": "Halle (Saale)",
+    "country": "germany",
+    "x": 5833.82,
+    "z": -5407.88
+  },
+  {
+    "token": "hameenlinna",
+    "name": "Hämeenlinna",
+    "country": "finland",
+    "x": 42545.3,
+    "z": -59899.2
+  },
+  {
+    "token": "havre",
+    "name": "Le Havre",
+    "country": "france",
+    "x": -38340.7,
+    "z": 1479.85
+  },
+  {
+    "token": "heilbronn",
+    "name": "Heilbronn",
+    "country": "germany",
+    "x": -6325.54,
+    "z": 8009.55
+  },
+  {
+    "token": "herning",
+    "name": "Herning",
+    "country": "denmark",
+    "x": -3455.63,
+    "z": -30797.0
+  },
+  {
+    "token": "hofn",
+    "name": "Höfn",
+    "country": "iceland",
+    "x": -73990.5,
+    "z": -88514.8
+  },
+  {
+    "token": "holmavik",
+    "name": "Hólmavík",
+    "country": "iceland",
+    "x": -84765.7,
+    "z": -106902.0
+  },
+  {
+    "token": "holstebro",
+    "name": "Holstebro",
+    "country": "denmark",
+    "x": -3816.61,
+    "z": -32659.8
+  },
+  {
+    "token": "hull",
+    "name": "Hull",
+    "country": "uk",
+    "x": -35543.9,
+    "z": -29239.1
+  },
+  {
+    "token": "ijmuiden",
+    "name": "IJmuiden",
+    "country": "netherlands",
+    "x": -19700.3,
+    "z": -12077.1
+  },
+  {
+    "token": "inverness",
+    "name": "Inverness",
+    "country": "uk",
+    "x": -46444.2,
+    "z": -59141.8
+  },
+  {
+    "token": "irun",
+    "name": "Irun",
+    "country": "spain",
+    "x": -52725.0,
+    "z": 35051.0
+  },
+  {
+    "token": "isafjordur",
+    "name": "Ísafjörður",
+    "country": "iceland",
+    "x": -87022.4,
+    "z": -111213.0
+  },
+  {
+    "token": "jonquera",
+    "name": "La Jonquera",
+    "country": "spain",
+    "x": -33815.4,
+    "z": 44330.0
+  },
+  {
+    "token": "kardla",
+    "name": "Kärdla",
+    "country": "estonia",
+    "x": 39138.0,
+    "z": -47985.5
+  },
+  {
+    "token": "karsamaki",
+    "name": "Kärsämäki",
+    "country": "finland",
+    "x": 43370.3,
+    "z": -77032.8
+  },
+  {
+    "token": "keflavik",
+    "name": "Keflavík Airport",
+    "country": "iceland",
+    "x": -94118.3,
+    "z": -98004.0
+  },
+  {
+    "token": "kemi",
+    "name": "Kemi",
+    "country": "finland",
+    "x": 44421.9,
+    "z": -92994.8
+  },
+  {
+    "token": "kielce",
+    "name": "Kielce",
+    "country": "poland",
+    "x": 36896.1,
+    "z": -1011.63
+  },
+  {
+    "token": "kirkenes",
+    "name": "Kirkenes",
+    "country": "norway",
+    "x": 44536.5,
+    "z": -108965.0
+  },
+  {
+    "token": "kirkwall",
+    "name": "Kirkwall",
+    "country": "uk",
+    "x": -38213.7,
+    "z": -68910.3
+  },
+  {
+    "token": "klaksvik",
+    "name": "Klaksvík",
+    "country": "faroe",
+    "x": -49964.0,
+    "z": -83155.7
+  },
+  {
+    "token": "kolding",
+    "name": "Kolding",
+    "country": "denmark",
+    "x": -1459.68,
+    "z": -27181.4
+  },
+  {
+    "token": "koszalin",
+    "name": "Koszalin",
+    "country": "poland",
+    "x": 20321.5,
+    "z": -19548.9
+  },
+  {
+    "token": "krafla",
+    "name": "Krafla",
+    "country": "iceland",
+    "x": -72508.4,
+    "z": -99684.3
+  },
+  {
+    "token": "kristianstad",
+    "name": "Kristianstad",
+    "country": "sweden",
+    "x": 13704.1,
+    "z": -29967.9
+  },
+  {
+    "token": "kristiinank",
+    "name": "Kristiinankaupunki",
+    "country": "finland",
+    "x": 32474.3,
+    "z": -66055.6
+  },
+  {
+    "token": "krosno",
+    "name": "Krosno",
+    "country": "poland",
+    "x": 40842.8,
+    "z": 4645.48
+  },
+  {
+    "token": "kuressaare",
+    "name": "Kuressaare",
+    "country": "estonia",
+    "x": 38652.6,
+    "z": -43361.0
+  },
+  {
+    "token": "longyearbyen",
+    "name": "Longyearbyen",
+    "country": "norway",
+    "x": 19567.1,
+    "z": -180806.0
+  },
+  {
+    "token": "lorient",
+    "name": "Lorient",
+    "country": "france",
+    "x": -54828.6,
+    "z": 8687.19
+  },
+  {
+    "token": "manresa",
+    "name": "Manresa",
+    "country": "spain",
+    "x": -39339.8,
+    "z": 46488.6
+  },
+  {
+    "token": "mans",
+    "name": "Le Mans",
+    "country": "france",
+    "x": -40038.6,
+    "z": 10523.9
+  },
+  {
+    "token": "modena",
+    "name": "Modena",
+    "country": "italy",
+    "x": 75.46,
+    "z": 34539.4
+  },
+  {
+    "token": "moskushamn",
+    "name": "Moskushamn",
+    "country": "norway",
+    "x": 20558.7,
+    "z": -181799.0
+  },
+  {
+    "token": "mukacheve",
+    "name": "Мукачеве (Mukacheve)",
+    "country": "ukraine",
+    "x": 45497.1,
+    "z": 11834.6
+  },
+  {
+    "token": "murmansk",
+    "name": "Мурманск (Murmansk)",
+    "country": "russia",
+    "x": 53970.5,
+    "z": -105283.0
+  },
+  {
+    "token": "napapiiri",
+    "name": "Napapiiri",
+    "country": "finland",
+    "x": 41580.4,
+    "z": -92240.3
+  },
+  {
+    "token": "narbonne",
+    "name": "Narbonne",
+    "country": "france",
+    "x": -33667.0,
+    "z": 38783.3
+  },
+  {
+    "token": "nikel",
+    "name": "Никель (Nikel)",
+    "country": "russia",
+    "x": 46367.6,
+    "z": -105017.0
+  },
+  {
+    "token": "nowogard",
+    "name": "Nowogard",
+    "country": "poland",
+    "x": 17888.8,
+    "z": -16557.9
+  },
+  {
+    "token": "oban",
+    "name": "Oban",
+    "country": "uk",
+    "x": -53420.4,
+    "z": -53472.1
+  },
+  {
+    "token": "oberhausen",
+    "name": "Oberhausen",
+    "country": "germany",
+    "x": -11793.2,
+    "z": -5322.95
+  },
+  {
+    "token": "opole",
+    "name": "Opole",
+    "country": "poland",
+    "x": 27536.9,
+    "z": -679.39
+  },
+  {
+    "token": "oradea",
+    "name": "Oradea",
+    "country": "romania",
+    "x": 43493.9,
+    "z": 19439.1
+  },
+  {
+    "token": "orlea",
+    "name": "Orléans",
+    "country": "france",
+    "x": -33526.4,
+    "z": 11781.6
+  },
+  {
+    "token": "ostroleka",
+    "name": "Ostrołęka",
+    "country": "poland",
+    "x": 38890.4,
+    "z": -14259.3
+  },
+  {
+    "token": "padborg",
+    "name": "Padborg",
+    "country": "denmark",
+    "x": -1608.62,
+    "z": -24340.2
+  },
+  {
+    "token": "pau",
+    "name": "Pau",
+    "country": "france",
+    "x": -47944.2,
+    "z": 36082.7
+  },
+  {
+    "token": "perpignan",
+    "name": "Perpignan",
+    "country": "france",
+    "x": -34520.9,
+    "z": 41436.8
+  },
+  {
+    "token": "piatra",
+    "name": "Piatra Neamţ",
+    "country": "romania",
+    "x": 59773.0,
+    "z": 17823.8
+  },
+  {
+    "token": "pila",
+    "name": "Piła",
+    "country": "poland",
+    "x": 21276.1,
+    "z": -14380.2
+  },
+  {
+    "token": "plock",
+    "name": "Płock",
+    "country": "poland",
+    "x": 32393.4,
+    "z": -10665.9
+  },
+  {
+    "token": "poitiers",
+    "name": "Poitiers",
+    "country": "france",
+    "x": -41108.0,
+    "z": 18442.8
+  },
+  {
+    "token": "portree",
+    "name": "Portree",
+    "country": "uk",
+    "x": -53845.9,
+    "z": -61021.8
+  },
+  {
+    "token": "portsmouth",
+    "name": "Portsmouth",
+    "country": "uk",
+    "x": -43034.2,
+    "z": -5752.09
+  },
+  {
+    "token": "porvoo",
+    "name": "Porvoo",
+    "country": "finland",
+    "x": 47431.8,
+    "z": -57017.7
+  },
+  {
+    "token": "przemysl",
+    "name": "Przemyśl",
+    "country": "poland",
+    "x": 44670.6,
+    "z": 3973.53
+  },
+  {
+    "token": "puttgarden",
+    "name": "Puttgarden",
+    "country": "germany",
+    "x": 4001.17,
+    "z": -21612.7
+  },
+  {
+    "token": "radom",
+    "name": "Radom",
+    "country": "poland",
+    "x": 38543.6,
+    "z": -4837.94
+  },
+  {
+    "token": "ramsey",
+    "name": "Ramsey",
+    "country": "iom",
+    "x": -53660.9,
+    "z": -36755.5
+  },
+  {
+    "token": "renne",
+    "name": "Rennes",
+    "country": "france",
+    "x": -48307.4,
+    "z": 8223.08
+  },
+  {
+    "token": "reydar",
+    "name": "Reyðarfjörður",
+    "country": "iceland",
+    "x": -69235.1,
+    "z": -92368.9
+  },
+  {
+    "token": "reykjavik",
+    "name": "Reykjavík",
+    "country": "iceland",
+    "x": -90723.9,
+    "z": -98482.6
+  },
+  {
+    "token": "rodbyhavn",
+    "name": "Rødbyhavn",
+    "country": "denmark",
+    "x": 4378.43,
+    "z": -22326.5
+  },
+  {
+    "token": "rouen",
+    "name": "Rouen",
+    "country": "france",
+    "x": -34886.4,
+    "z": 2583.58
+  },
+  {
+    "token": "rzeszow",
+    "name": "Rzeszów",
+    "country": "poland",
+    "x": 42993.9,
+    "z": 2919.09
+  },
+  {
+    "token": "sanok",
+    "name": "Sanok",
+    "country": "poland",
+    "x": 43027.8,
+    "z": 5134.43
+  },
+  {
+    "token": "selfoss",
+    "name": "Selfoss",
+    "country": "iceland",
+    "x": -89796.2,
+    "z": -95809.1
+  },
+  {
+    "token": "seydis",
+    "name": "Seyðisfjörður",
+    "country": "iceland",
+    "x": -68112.5,
+    "z": -93717.5
+  },
+  {
+    "token": "sibiu",
+    "name": "Sibiu",
+    "country": "romania",
+    "x": 52251.6,
+    "z": 26325.7
+  },
+  {
+    "token": "siedlce",
+    "name": "Siedlce",
+    "country": "poland",
+    "x": 41651.7,
+    "z": -9261.17
+  },
+  {
+    "token": "soderhamn",
+    "name": "Söderhamn",
+    "country": "sweden",
+    "x": 21956.2,
+    "z": -59633.3
+  },
+  {
+    "token": "sthelier",
+    "name": "St Helier",
+    "country": "uk",
+    "x": -47502.3,
+    "z": 2063.23
+  },
+  {
+    "token": "stromness",
+    "name": "Stromness",
+    "country": "uk",
+    "x": -39126.5,
+    "z": -68742.7
+  },
+  {
+    "token": "suwalki",
+    "name": "Suwałki",
+    "country": "poland",
+    "x": 43448.6,
+    "z": -21045.2
+  },
+  {
+    "token": "swinoujscie",
+    "name": "Świnoujście",
+    "country": "poland",
+    "x": 13488.7,
+    "z": -17184.3
+  },
+  {
+    "token": "thurso",
+    "name": "Thurso",
+    "country": "uk",
+    "x": -41731.6,
+    "z": -66122.4
+  },
+  {
+    "token": "torshavn",
+    "name": "Tórshavn",
+    "country": "faroe",
+    "x": -51298.5,
+    "z": -81483.6
+  },
+  {
+    "token": "tours",
+    "name": "Tours",
+    "country": "france",
+    "x": -38487.6,
+    "z": 14301.3
+  },
+  {
+    "token": "trinity",
+    "name": "Trinity",
+    "country": "uk",
+    "x": -47726.4,
+    "z": 1242.87
+  },
+  {
+    "token": "tukums",
+    "name": "Tukums",
+    "country": "latvia",
+    "x": 41200.5,
+    "z": -37187.2
+  },
+  {
+    "token": "ulm",
+    "name": "Ulm",
+    "country": "germany",
+    "x": -2928.57,
+    "z": 12657.0
+  },
+  {
+    "token": "uzhhorod",
+    "name": "Ужгород (Uzhhorod)",
+    "country": "ukraine",
+    "x": 43781.0,
+    "z": 11200.1
+  },
+  {
+    "token": "vaduz",
+    "name": "Vaduz",
+    "country": "liecht",
+    "x": -3865.21,
+    "z": 18906.6
+  },
+  {
+    "token": "valga",
+    "name": "Valga",
+    "country": "estonia",
+    "x": 49770.1,
+    "z": -42978.1
+  },
+  {
+    "token": "valka",
+    "name": "Valka",
+    "country": "latvia",
+    "x": 49463.9,
+    "z": -42752.1
+  },
+  {
+    "token": "vantaa",
+    "name": "Vantaa",
+    "country": "finland",
+    "x": 45004.3,
+    "z": -56661.7
+  },
+  {
+    "token": "varkaus",
+    "name": "Varkaus",
+    "country": "finland",
+    "x": 50510.6,
+    "z": -68975.5
+  },
+  {
+    "token": "viborg",
+    "name": "Viborg",
+    "country": "denmark",
+    "x": -1033.26,
+    "z": -33233.7
+  },
+  {
+    "token": "vicenza",
+    "name": "Vicenza",
+    "country": "italy",
+    "x": 3032.82,
+    "z": 29533.5
+  },
+  {
+    "token": "viitasaari",
+    "name": "Viitasaari",
+    "country": "finland",
+    "x": 44214.6,
+    "z": -72353.1
+  },
+  {
+    "token": "vik",
+    "name": "Vík",
+    "country": "iceland",
+    "x": -86702.3,
+    "z": -89729.3
+  },
+  {
+    "token": "wick",
+    "name": "Wick",
+    "country": "uk",
+    "x": -39662.3,
+    "z": -64980.1
+  },
+  {
+    "token": "zamosc",
+    "name": "Zamość",
+    "country": "poland",
+    "x": 46167.3,
+    "z": -1538.1
+  },
+  {
+    "token": "zelenogradsk",
+    "name": "Зеленоградск (Zelenogradsk)",
+    "country": "russia",
+    "x": 34230.9,
+    "z": -24320.9
+  },
+  {
+    "token": "zgorzelec",
+    "name": "Zgorzelec",
+    "country": "poland",
+    "x": 16779.7,
+    "z": -1715.38
+  },
+  {
+    "token": "zwolle",
+    "name": "Zwolle",
+    "country": "netherlands",
+    "x": -14526.0,
+    "z": -12292.1
+  },
+  {
+    "token": "gdyne",
+    "name": "Gdynia",
+    "country": "poland",
+    "x": 28154.4,
+    "z": -22045.9
+  },
+  {
+    "token": "aquila",
+    "name": "L'Aquila",
+    "country": "italy",
+    "x": 10098.9,
+    "z": 46803.9
+  },
+  {
+    "token": "catanz",
+    "name": "Catanzaro",
+    "country": "italy",
+    "x": 23154.8,
+    "z": 66889.7
+  },
+  {
+    "token": "civitavec",
+    "name": "Civitavecchia",
+    "country": "italy",
+    "x": 3124.0,
+    "z": 48749.1
+  },
+  {
+    "token": "crotone",
+    "name": "Crotone",
+    "country": "italy",
+    "x": 25677.5,
+    "z": 65250.7
+  },
+  {
+    "token": "enna",
+    "name": "Enna",
+    "country": "italy",
+    "x": 12818.1,
+    "z": 74267.5
+  },
+  {
+    "token": "foggia",
+    "name": "Foggia",
+    "country": "italy",
+    "x": 18927.3,
+    "z": 52413.7
+  },
+  {
+    "token": "imola",
+    "name": "Imola",
+    "country": "italy",
+    "x": 3285.87,
+    "z": 35401.5
+  },
+  {
+    "token": "laspezia",
+    "name": "La Spezia",
+    "country": "italy",
+    "x": -5183.63,
+    "z": 37196.4
+  },
+  {
+    "token": "latina",
+    "name": "Latina",
+    "country": "italy",
+    "x": 7571.98,
+    "z": 52219.6
+  },
+  {
+    "token": "lecce",
+    "name": "Lecce",
+    "country": "italy",
+    "x": 30077.0,
+    "z": 58629.2
+  },
+  {
+    "token": "lucca",
+    "name": "Lucca",
+    "country": "italy",
+    "x": -1316.87,
+    "z": 38411.4
+  },
+  {
+    "token": "oristano",
+    "name": "Oristano",
+    "country": "italy",
+    "x": -11619.1,
+    "z": 59839.6
+  },
+  {
+    "token": "perugia",
+    "name": "Perugia",
+    "country": "italy",
+    "x": 5484.8,
+    "z": 42625.8
+  },
+  {
+    "token": "pisa",
+    "name": "Pisa",
+    "country": "italy",
+    "x": -2296.73,
+    "z": 39358.6
+  },
+  {
+    "token": "potenza",
+    "name": "Potenza",
+    "country": "italy",
+    "x": 19793.2,
+    "z": 57224.2
+  },
+  {
+    "token": "ravenna",
+    "name": "Ravenna",
+    "country": "italy",
+    "x": 5416.85,
+    "z": 35514.5
+  },
+  {
+    "token": "reggio",
+    "name": "Reggio",
+    "country": "italy",
+    "x": 20164.5,
+    "z": 72275.1
+  },
+  {
+    "token": "siena",
+    "name": "Siena",
+    "country": "italy",
+    "x": 1194.18,
+    "z": 41722.3
+  },
+  {
+    "token": "atyrau",
+    "name": "Atyrau",
+    "country": "kazakhstan",
+    "x": 161288.0,
+    "z": -759.52
+  },
+  {
+    "token": "dossor",
+    "name": "Dossor",
+    "country": "kazakhstan",
+    "x": 166625.0,
+    "z": -2713.12
+  },
+  {
+    "token": "furmanovo",
+    "name": "Furmanovo",
+    "country": "kazakhstan",
+    "x": 147738.0,
+    "z": -25399.4
+  },
+  {
+    "token": "inderborsky",
+    "name": "Inderborsky",
+    "country": "kazakhstan",
+    "x": 161991.0,
+    "z": -9071.86
+  },
+  {
+    "token": "kulsari",
+    "name": "Kulsari",
+    "country": "kazakhstan",
+    "x": 171634.0,
+    "z": 359.63
+  },
+  {
+    "token": "lubenka",
+    "name": "Lubenka",
+    "country": "kazakhstan",
+    "x": 172131.0,
+    "z": -20870.1
+  },
+  {
+    "token": "makat",
+    "name": "Makat",
+    "country": "kazakhstan",
+    "x": 168706.0,
+    "z": -3459.58
+  },
+  {
+    "token": "uralsk",
+    "name": "Uralsk",
+    "country": "kazakhstan",
+    "x": 158495.0,
+    "z": -24950.6
+  },
+  {
+    "token": "vzletnyy",
+    "name": "Vzletnyy",
+    "country": "russia",
+    "x": 137243.0,
+    "z": -27391.7
+  },
+  {
+    "token": "zhympity",
+    "name": "Zhympity",
+    "country": "kazakhstan",
+    "x": 165239.0,
+    "z": -19368.3
+  },
+  {
+    "token": "billings",
+    "name": "Billings",
+    "country": "montana",
+    "x": -48677.9,
+    "z": -42375.1
+  },
+  {
+    "token": "bozeman",
+    "name": "Bozeman",
+    "country": "montana",
+    "x": -59779.1,
+    "z": -42966.3
+  },
+  {
+    "token": "butte",
+    "name": "Butte",
+    "country": "montana",
+    "x": -64788.6,
+    "z": -45335.3
+  },
+  {
+    "token": "glasgow_mt",
+    "name": "Glasgow",
+    "country": "montana",
+    "x": -40268.7,
+    "z": -54673.6
+  },
+  {
+    "token": "glendive",
+    "name": "Glendive",
+    "country": "montana",
+    "x": -33819.1,
+    "z": -47322.6
+  },
+  {
+    "token": "great_falls",
+    "name": "Great Falls",
+    "country": "montana",
+    "x": -57882.9,
+    "z": -54597.5
+  },
+  {
+    "token": "helena",
+    "name": "Helena",
+    "country": "montana",
+    "x": -61403.9,
+    "z": -49028.7
+  },
+  {
+    "token": "kalispell",
+    "name": "Kalispell",
+    "country": "montana",
+    "x": -69691.6,
+    "z": -59999.2
+  },
+  {
+    "token": "laurel",
+    "name": "Laurel",
+    "country": "montana",
+    "x": -50371.4,
+    "z": -40981.6
+  },
+  {
+    "token": "lewistown",
+    "name": "Lewistown",
+    "country": "montana",
+    "x": -51777.8,
+    "z": -49878.1
+  },
+  {
+    "token": "miles_city",
+    "name": "Miles City",
+    "country": "montana",
+    "x": -38197.5,
+    "z": -45381.5
+  },
+  {
+    "token": "missoula",
+    "name": "Missoula",
+    "country": "montana",
+    "x": -69914.2,
+    "z": -52575.5
+  },
+  {
+    "token": "sidney",
+    "name": "Sidney",
+    "country": "montana",
+    "x": -31754.0,
+    "z": -51097.8
+  },
+  {
+    "token": "thompson_f",
+    "name": "Thompson Falls",
+    "country": "montana",
+    "x": -72525.9,
+    "z": -56488.5
   }
 ];
-
-// Dicionário de sinônimos em Português e variações de grafia
-const CITY_SYNONYMS = {
-  'berna': 'bern',
-  'milao': 'milano',
-  'milan': 'milano',
-  'munique': 'munich',
-  'muenchen': 'munich',
-  'genebra': 'geneva',
-  'geneve': 'geneva',
-  'zurique': 'zurich',
-  'zuerich': 'zurich',
-  'varsovia': 'warsaw',
-  'warszawa': 'warsaw',
-  'viena': 'vienna',
-  'wien': 'vienna',
-  'praga': 'prague',
-  'praha': 'prague',
-  'bruxelas': 'brussels',
-  'bruxelles': 'brussels',
-  'londres': 'london',
-  'lisboa': 'lisbon',
-  'roma': 'rome',
-  'colonia': 'cologne',
-  'koeln': 'cologne',
-  'florenca': 'florence',
-  'firenze': 'florence',
-  'napoles': 'naples',
-  'napoli': 'naples',
-  'turim': 'turin',
-  'torino': 'turin',
-  'veneza': 'venice',
-  'venezia': 'venice',
-  'genova': 'genoa',
-  'estrasburgo': 'strasbourg',
-  'gotemburgo': 'goteborg',
-  'estocolmo': 'stockholm',
-  'copenhague': 'kobenhavn',
-  'bucareste': 'bucharest',
-  'istambul': 'istanbul'
-};
-
-function normalizeStr(str) {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-}
-
-/**
- * Encontra uma cidade do ETS2 por nome, token ou sinônimo em Português.
- * @param {string} query 
- * @returns {object|null} { token, name, country, x, z }
- */
-export function findEts2City(query) {
-  if (!query || typeof query !== 'string') return null;
-  const q = normalizeStr(query);
-  if (!q || q === 'destino') return null;
-
-  const targetKey = CITY_SYNONYMS[q] || q;
-
-  // 1. Correspondência exata por token ou nome
-  for (const c of ETS2_ALL_CITIES) {
-    const cTok = normalizeStr(c.token);
-    const cName = normalizeStr(c.name);
-    if (targetKey === cTok || targetKey === cName || q === cTok || q === cName) {
-      return c;
-    }
-  }
-
-  // 2. Correspondência parcial (inclusão de substring)
-  for (const c of ETS2_ALL_CITIES) {
-    const cTok = normalizeStr(c.token);
-    const cName = normalizeStr(c.name);
-    if (targetKey.includes(cTok) || cTok.includes(targetKey) ||
-        targetKey.includes(cName) || cName.includes(targetKey)) {
-      return c;
-    }
-  }
-
-  return null;
-}

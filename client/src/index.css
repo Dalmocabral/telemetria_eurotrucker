@@ -1246,6 +1246,10 @@ body {
   left: 0;
   background: #0b111e;
   outline: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .maplibregl-canvas {
@@ -1555,6 +1559,42 @@ body {
   letter-spacing: 0.5px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   animation: pulse 1.2s infinite;
+}
+
+/* 3.1 Banner Flutuante de Centralizar (aparece ao mover o mapa manualmente / pinch zoom) */
+.gps-floating-recenter-banner {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.95) 0%, rgba(2, 132, 199, 0.95) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 16px rgba(14, 165, 233, 0.45);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: radar-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gps-floating-recenter-banner:hover {
+  transform: translateX(-50%) scale(1.05);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 1) 0%, rgba(14, 165, 233, 1) 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 22px rgba(56, 189, 248, 0.6);
+}
+
+.gps-floating-recenter-banner:active {
+  transform: translateX(-50%) scale(0.96);
 }
 
 /* 4. Coluna Flutuante de Controles à Direita */
