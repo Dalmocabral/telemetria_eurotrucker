@@ -347,6 +347,9 @@ class RoadRouter:
                     if len(coords) >= 2 and geo_distance_meters(city_center, (coords[0], coords[1])) < 40000.0:
                         candidates.append(feat)
 
+                # Prioriza candidatos mais próximos do centro da cidade de destino (evita empresas em cidades vizinhas como Dortmund vs Duisburg)
+                candidates.sort(key=lambda feat: geo_distance_meters(city_center, (feat["geometry"]["coordinates"][0], feat["geometry"]["coordinates"][1])))
+
                 # Prioridade 1: ID exato do sprite / token
                 for cand in candidates:
                     props = cand.get("properties", {})
@@ -510,6 +513,84 @@ class RoadRouter:
         # 5. Gera instruções de manobra reais a partir dos ângulos da rota
         maneuvers = self._generate_maneuvers(route_coords, path_nodes)
 
+        primary_eta_min = max(1, round((cost / 1000.0) / 72.0 * 60.0))
+        primary_feature = self._build_geojson_feature(route_coords, dest_info, cost)
+
+        primary_route_obj = {
+            "id": "primary",
+            "name": "Mais rápida",
+            "distance_meters": round(cost),
+            "distance_km": round(cost / 1000.0, 1),
+            "eta_minutes": primary_eta_min,
+            "eta_formatted": f"{primary_eta_min // 60}h {primary_eta_min % 60:02d}m" if primary_eta_min >= 60 else f"{primary_eta_min} min",
+            "diff_km": "0 km",
+            "diff_minutes": "0 min",
+            "is_fastest": True,
+            "geojson": primary_feature,
+            "maneuvers": maneuvers,
+        }
+
+        routes = [primary_route_obj]
+
+        # 6. Cálculo de Rota Alternativa Inteligente (Estilo Google Maps)
+        # Tenta traçar uma via alternativa penalizando o corredor viário principal
+        if len(path_nodes) >= 12:
+            cutoff_start = max(1, int(len(path_nodes) * 0.08))
+            cutoff_end = min(len(path_nodes) - 1, max(cutoff_start + 1, int(len(path_nodes) * 0.92)))
+            penalized_edges = set()
+            for i in range(cutoff_start, cutoff_end):
+                penalized_edges.add((path_nodes[i], path_nodes[i + 1]))
+                penalized_edges.add((path_nodes[i + 1], path_nodes[i]))
+
+            alt_nodes, alt_cost, alt_ok = self._run_astar(
+                start_node, 
+                target_node, 
+                max_iterations=max_iterations,
+                penalized_edges=penalized_edges,
+                penalty_factor=2.4
+            )
+
+            if alt_ok and alt_nodes and len(alt_nodes) >= 5:
+                # Calcula sobreposição com a rota principal
+                common_nodes = set(path_nodes).intersection(set(alt_nodes))
+                overlap_ratio = len(common_nodes) / max(1, len(path_nodes))
+                
+                # Aceita alternativa se divergir substancialmente (< 88% sobreposição)
+                # e não for excessivamente longa (<= 1.55x da rota principal)
+                if overlap_ratio < 0.88 and (cost * 0.95 <= alt_cost <= cost * 1.55) and abs(alt_cost - cost) > 400.0:
+                    alt_coords = self._extract_path_geometry(alt_nodes)
+                    if alt_coords:
+                        alt_coords.insert(0, [start_lon, start_lat])
+                        alt_coords.append([dest_lon, dest_lat])
+
+                    alt_maneuvers = self._generate_maneuvers(alt_coords, alt_nodes)
+                    alt_eta_min = max(1, round((alt_cost / 1000.0) / 72.0 * 60.0))
+                    
+                    diff_km_num = round((alt_cost - cost) / 1000.0, 1)
+                    diff_min_num = alt_eta_min - primary_eta_min
+                    
+                    diff_km_str = f"+{diff_km_num} km" if diff_km_num > 0 else f"{diff_km_num} km"
+                    diff_min_str = f"+{diff_min_num} min" if diff_min_num > 0 else f"{diff_min_num} min"
+
+                    alt_feature = self._build_geojson_feature(alt_coords, dest_info, alt_cost)
+                    alt_feature["properties"]["is_alternative"] = True
+
+                    routes.append({
+                        "id": "alternative",
+                        "name": "Via alternativa",
+                        "distance_meters": round(alt_cost),
+                        "distance_km": round(alt_cost / 1000.0, 1),
+                        "eta_minutes": alt_eta_min,
+                        "eta_formatted": f"{alt_eta_min // 60}h {alt_eta_min % 60:02d}m" if alt_eta_min >= 60 else f"{alt_eta_min} min",
+                        "diff_km": diff_km_str,
+                        "diff_minutes": diff_min_str,
+                        "diff_seconds": diff_min_num * 60,
+                        "is_fastest": False,
+                        "overlap_percent": round(overlap_ratio * 100, 1),
+                        "geojson": alt_feature,
+                        "maneuvers": alt_maneuvers,
+                    })
+
         return {
             "success": True,
             "distance_meters": round(cost),
@@ -518,7 +599,8 @@ class RoadRouter:
             "point_count": len(route_coords),
             "destination": dest_info,
             "maneuvers": maneuvers,
-            "geojson": self._build_geojson_feature(route_coords, dest_info, cost),
+            "geojson": primary_feature,
+            "routes": routes,
         }
 
     def _run_astar(
@@ -526,8 +608,10 @@ class RoadRouter:
         start_node: int,
         target_node: int,
         max_iterations: int = 150000,
+        penalized_edges: Optional[Set[Tuple[int, int]]] = None,
+        penalty_factor: float = 2.4,
     ) -> Tuple[List[int], float, bool]:
-        """Algoritmo A* com heurística Euclidiana e penalidade de retornos impossíveis."""
+        """Algoritmo A* com heurística Euclidiana e suporte a penalização para rotas alternativas."""
         target_coord = self.node_coords[target_node]
         tx, ty = target_coord
 
@@ -549,6 +633,9 @@ class RoadRouter:
             for edge in self.adjacency.get(current, []):
                 neighbor = edge["to"]
                 weight = edge["weight"]
+
+                if penalized_edges and ((current, neighbor) in penalized_edges or (neighbor, current) in penalized_edges):
+                    weight = weight * penalty_factor
 
                 new_cost = cur_cost + weight
                 if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
@@ -574,7 +661,18 @@ class RoadRouter:
             path.append(curr)
             curr = came_from[curr]
         path.reverse()
-        return path, cost_so_far[target_node], True
+
+        # Calcula o custo real sem multiplicadores de penalidade
+        real_cost = 0.0
+        for i in range(len(path) - 1):
+            u = path[i]
+            v = path[i + 1]
+            for edge in self.adjacency.get(u, []):
+                if edge["to"] == v:
+                    real_cost += edge["weight"]
+                    break
+
+        return path, real_cost, True
 
     def _extract_path_geometry(self, path_nodes: List[int]) -> List[List[float]]:
         """Extrai todos os pontos intermediários das curvas a partir do geometry.bin."""

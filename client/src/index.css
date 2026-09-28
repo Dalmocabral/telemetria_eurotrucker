@@ -1723,6 +1723,124 @@ body {
   bottom: 16px;
   right: 14px;
   z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100vw - 28px);
+}
+
+/* Seletor de Rotas Inteligente Estilo Google Maps */
+.gps-route-options-shelf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.gps-route-chip-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  min-width: 130px;
+}
+
+.gps-route-chip-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.gps-route-chip-card.active-chip {
+  border: 1.5px solid #00e5ff;
+  background: rgba(10, 25, 47, 0.95);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.32), 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.gps-route-chip-card.inactive-chip {
+  opacity: 0.82;
+}
+
+.gps-route-chip-card.inactive-chip:hover {
+  opacity: 1.0;
+}
+
+.chip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 3px;
+}
+
+.chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.chip-name {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+.active-chip .chip-name {
+  color: #00e5ff;
+}
+
+.chip-selected-badge {
+  margin-left: auto;
+  background: rgba(0, 229, 255, 0.2);
+  color: #00e5ff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.chip-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.chip-km {
+  font-family: var(--font-digital, monospace);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.chip-diff-best {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.chip-diff-loss {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f59e0b;
 }
 
 .destination-badge-yellow {

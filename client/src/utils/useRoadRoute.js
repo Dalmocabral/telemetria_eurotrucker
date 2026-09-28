@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 /**
  * Hook para gerenciamento e cálculo da rota rodoviária oficial do ETS2.
  * Comunica-se com o backend Python via /api/route de forma assíncrona,
- * detecta mudanças de destino e desvios de rota sem travar o mapa ou o loop de telemetria.
+ * detecta mudanças de destino e desvios de rota em alta velocidade (1-2s),
+ * e gerencia rotas alternativas inteligentes estilo Google Maps.
  */
 export function useRoadRoute(placement, job, enabled = true) {
-  const [routeGeoJson, setRouteGeoJson] = useState(null);
-  const [routeStats, setRouteStats] = useState(null);
+  const [routes, setRoutes] = useState([]);
+  const [activeRouteId, setActiveRouteId] = useState('primary');
   const [destinationInfo, setDestinationInfo] = useState(null);
-  const [maneuvers, setManeuvers] = useState([]);
   const [routeStatus, setRouteStatus] = useState('idle'); // 'idle' | 'loading' | 'active' | 'error'
   const [routeError, setRouteError] = useState(null);
   const [stageOverride, setStageOverride] = useState(null); // null ('auto') | 'pickup' | 'delivery'
@@ -48,10 +48,8 @@ export function useRoadRoute(placement, job, enabled = true) {
     if (!enabled) return;
     if (!truckX && !truckZ) return;
     if (!targetCity && !targetCityId) {
-      setRouteGeoJson(null);
-      setRouteStats(null);
+      setRoutes([]);
       setDestinationInfo(null);
-      setManeuvers([]);
       setRouteStatus('idle');
       setRouteError(null);
       lastRoutedDestKeyRef.current = '';
@@ -59,8 +57,8 @@ export function useRoadRoute(placement, job, enabled = true) {
     }
 
     const now = Date.now();
-    // Throttle: não executa mais de 1 cálculo a cada 3 segundos
-    if (!force && now - lastCalculationTimeRef.current < 3000) {
+    // Throttle reduzido para 1200ms para resposta rápida, mas protegendo de spam
+    if (!force && now - lastCalculationTimeRef.current < 1200) {
       return;
     }
     if (isCalculatingRef.current) return;
@@ -92,28 +90,43 @@ export function useRoadRoute(placement, job, enabled = true) {
       }
 
       const data = await res.json();
-      if (data.success && data.geojson) {
-        setRouteGeoJson(data.geojson);
-        setRouteStats({
-          distance_meters: data.distance_meters,
-          distance_km: data.distance_km,
-          point_count: data.point_count,
-        });
+      if (data.success && (data.geojson || (data.routes && data.routes.length > 0))) {
         const enrichedDest = {
           ...data.destination,
           isPickup: isGoingToPickup,
           taskTitle: isGoingToPickup ? 'Coleta da Carga' : 'Destino da Entrega',
         };
         setDestinationInfo(enrichedDest);
-        setManeuvers(data.maneuvers || []);
+
+        // Prepara lista de rotas (suporte a múltiplas rotas estilo Google Maps)
+        const incomingRoutes = data.routes && data.routes.length > 0 
+          ? data.routes 
+          : [{
+              id: 'primary',
+              name: 'Mais rápida',
+              distance_meters: data.distance_meters,
+              distance_km: data.distance_km,
+              point_count: data.point_count,
+              geojson: data.geojson,
+              maneuvers: data.maneuvers || [],
+              diff_km: '0 km',
+              diff_minutes: '0 min',
+              is_fastest: true,
+            }];
+
+        setRoutes(incomingRoutes);
+        
+        // Se a rota ativa anterior ainda existir na resposta, mantém ela; senão volta para 'primary'
+        setActiveRouteId(prevId => {
+          return incomingRoutes.some(r => r.id === prevId) ? prevId : 'primary';
+        });
+
         setRouteStatus('active');
         setRouteError(null);
         lastRoutedDestKeyRef.current = currentDestKey;
         offRouteCountRef.current = 0;
       } else {
-        setRouteGeoJson(null);
-        setRouteStats(null);
-        setManeuvers([]);
+        setRoutes([]);
         setRouteStatus('error');
         setRouteError(data.message || 'Não foi possível traçar uma rota por rodovias.');
         if (data.destination) {
@@ -137,7 +150,7 @@ export function useRoadRoute(placement, job, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
     if (!targetCity && !targetCityId) {
-      setRouteGeoJson(null);
+      setRoutes([]);
       setDestinationInfo(null);
       setRouteStatus('idle');
       return;
@@ -148,11 +161,40 @@ export function useRoadRoute(placement, job, enabled = true) {
     }
   }, [enabled, currentDestKey, targetCity, targetCityId, fetchRoute]);
 
-  // 2. Verificação periódica de desvio acentuado da rota (off-route detection)
+  // Rota ativa atual (selecionada) e rota alternativa
+  const activeRoute = useMemo(() => {
+    return routes.find(r => r.id === activeRouteId) || routes[0] || null;
+  }, [routes, activeRouteId]);
+
+  const alternativeRoute = useMemo(() => {
+    return routes.find(r => r.id !== activeRoute?.id) || null;
+  }, [routes, activeRoute]);
+
+  const routeGeoJson = activeRoute?.geojson || null;
+  const alternativeGeoJson = alternativeRoute?.geojson || null;
+
+  const routeStats = useMemo(() => {
+    if (!activeRoute) return null;
+    return {
+      distance_meters: activeRoute.distance_meters,
+      distance_km: activeRoute.distance_km,
+      eta_minutes: activeRoute.eta_minutes,
+      eta_formatted: activeRoute.eta_formatted,
+      diff_km: activeRoute.diff_km,
+      diff_minutes: activeRoute.diff_minutes,
+      point_count: activeRoute.point_count || activeRoute.geojson?.geometry?.coordinates?.length || 0,
+    };
+  }, [activeRoute]);
+
+  const maneuvers = useMemo(() => {
+    return activeRoute?.maneuvers || [];
+  }, [activeRoute]);
+
+  // 2. Verificação periódica de desvio da rota (recálculo dinâmico em 1 a 2 segundos)
   useEffect(() => {
     if (!enabled || !routeGeoJson || routeStatus !== 'active') return;
 
-    // Checa distância do caminhão em relação aos pontos da rota a cada 3 segundos
+    // Checa a cada 1000ms (1 segundo) para resposta instantânea ao volante
     const checkInterval = setInterval(() => {
       const coords = routeGeoJson?.geometry?.coordinates;
       if (!coords || coords.length === 0) return;
@@ -164,8 +206,8 @@ export function useRoadRoute(placement, job, enabled = true) {
       const truckLat = latRad * (180.0 / Math.PI);
 
       let minDistanceMeters = Infinity;
-      // Amostra pontos da rota para não pesar no navegador
-      const sampleStep = Math.max(1, Math.floor(coords.length / 50));
+      // Amostra pontos da rota
+      const sampleStep = Math.max(1, Math.floor(coords.length / 60));
       for (let i = 0; i < coords.length; i += sampleStep) {
         const pt = coords[i];
         const dx = (truckLon - pt[0]) * 72150.0;
@@ -176,24 +218,37 @@ export function useRoadRoute(placement, job, enabled = true) {
         }
       }
 
-      // Se estiver a mais de 350 metros de qualquer ponto da rota
-      if (minDistanceMeters > 350.0) {
+      // Detecção ultrarrápida de desvio:
+      // Se estiver a mais de 180m por 2 checagens consecutivas (2s), ou > 320m de imediato
+      if (minDistanceMeters > 180.0) {
         offRouteCountRef.current += 1;
-        if (offRouteCountRef.current >= 3) {
-          console.log('[useRoadRoute] Desvio de rota confirmado (>350m). Recalculando...');
+        if (offRouteCountRef.current >= 2 || minDistanceMeters > 320.0) {
+          console.log(`[useRoadRoute] Desvio detectado (${Math.round(minDistanceMeters)}m). Recalculando rota...`);
           offRouteCountRef.current = 0;
           fetchRoute(true);
         }
       } else {
         offRouteCountRef.current = 0;
       }
-    }, 3000);
+    }, 1000);
 
     return () => clearInterval(checkInterval);
   }, [enabled, routeGeoJson, routeStatus, truckX, truckZ, fetchRoute]);
 
+  const selectRoute = useCallback((routeId) => {
+    if (routes.some(r => r.id === routeId)) {
+      setActiveRouteId(routeId);
+    }
+  }, [routes]);
+
   return {
+    routes,
+    activeRouteId,
+    activeRoute,
+    alternativeRoute,
+    selectRoute,
     routeGeoJson,
+    alternativeGeoJson,
     routeStats,
     destinationInfo,
     maneuvers,

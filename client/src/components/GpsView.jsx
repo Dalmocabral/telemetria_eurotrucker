@@ -89,7 +89,13 @@ export default function GpsView({ data, isEmbedded = false }) {
 
   // 1. Hook de Roteamento Rodoviário Oficial do ETS2
   const {
+    routes,
+    activeRouteId,
+    activeRoute,
+    alternativeRoute,
+    selectRoute,
     routeGeoJson,
+    alternativeGeoJson,
     routeStats,
     destinationInfo,
     maneuvers,
@@ -126,24 +132,34 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
   }, [voiceEnabled]);
 
-  // Enquadrar a rota rodoviária completa do caminhão até a empresa/cidade de destino
+  // Enquadrar a rota rodoviária completa (incluindo rotas alternativas) até o destino
   const fitRouteToBounds = useCallback(() => {
     if (!mapInstanceRef.current) return;
     const coords = routeGeoJson?.geometry?.coordinates;
+    const altCoords = alternativeGeoJson?.geometry?.coordinates;
     if (coords && coords.length > 1) {
       const bounds = new maplibregl.LngLatBounds();
-      // Amostra pontos para enquadrar a curvatura completa
+      // Amostra pontos da rota ativa para enquadrar
       const step = Math.max(1, Math.floor(coords.length / 50));
       for (let i = 0; i < coords.length; i += step) {
         bounds.extend(coords[i]);
       }
       bounds.extend(coords[coords.length - 1]);
+
+      // Amostra também a rota alternativa se houver
+      if (altCoords && altCoords.length > 1) {
+        const altStep = Math.max(1, Math.floor(altCoords.length / 50));
+        for (let j = 0; j < altCoords.length; j += altStep) {
+          bounds.extend(altCoords[j]);
+        }
+      }
+
       if (currentPosRef.current) {
         bounds.extend(currentPosRef.current);
       }
       setFollowTruck(false);
       mapInstanceRef.current.fitBounds(bounds, {
-        padding: { top: 130, bottom: 100, left: 80, right: 80 },
+        padding: { top: 130, bottom: 120, left: 80, right: 80 },
         duration: 1000,
         pitch: 0,
       });
@@ -159,7 +175,7 @@ export default function GpsView({ data, isEmbedded = false }) {
         pitch: 0,
       });
     }
-  }, [routeGeoJson, destinationInfo, speakVoice]);
+  }, [routeGeoJson, alternativeGeoJson, destinationInfo, speakVoice]);
 
   // 4. Detecção em Tempo Real de Radares de Velocidade à Frente
   useEffect(() => {
@@ -342,7 +358,38 @@ export default function GpsView({ data, isEmbedded = false }) {
           if (!isMounted) return;
           map.resize();
 
-          // 1. Rota Rodoviária Planejada (Calculada sobre a rede de estradas reais do ETS2)
+          // 1. Rota Alternativa Secundária (Cinza escuro / tracejado estilo Google Maps)
+          map.addSource('alternative-route-source', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+          });
+
+          map.addLayer({
+            id: 'alternative-route-casing',
+            type: 'line',
+            source: 'alternative-route-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#020617',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 4.2, 8, 7.0, 11, 10.5, 14, 15.0],
+              'line-opacity': 0.85,
+            },
+          });
+
+          map.addLayer({
+            id: 'alternative-route-core',
+            type: 'line',
+            source: 'alternative-route-source',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#94a3b8',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 8, 4.5, 11, 6.8, 14, 9.5],
+              'line-opacity': 0.95,
+              'line-dasharray': [2, 1.2],
+            },
+          });
+
+          // 1.1 Rota Rodoviária Ativa / Principal (Azul Ciano Neon #00e5ff)
           map.addSource('planned-route-source', {
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
@@ -370,6 +417,18 @@ export default function GpsView({ data, isEmbedded = false }) {
               'line-width': ['interpolate', ['linear'], ['zoom'], 5, 3.2, 8, 5.5, 11, 8.5, 14, 12.0],
               'line-opacity': 0.98,
             },
+          });
+
+          // Clique na linha da rota alternativa para ativá-la
+          map.on('click', 'alternative-route-core', () => {
+            selectRoute('alternative');
+            speakVoice('Via alternativa selecionada.');
+          });
+          map.on('mouseenter', 'alternative-route-core', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'alternative-route-core', () => {
+            map.getCanvas().style.cursor = '';
           });
 
           // 2. Rastro Percorrido pelo Caminhão (Trajeto histórico recente em laranja)
@@ -587,7 +646,7 @@ export default function GpsView({ data, isEmbedded = false }) {
     };
   }, []);
 
-  // 6. Atualização da Rota Rodoviária Planejada no MapLibre GL
+  // 6. Atualização da Rota Ativa no MapLibre GL
   useEffect(() => {
     if (!mapInstanceRef.current || !mapLoaded) return;
     const source = mapInstanceRef.current.getSource('planned-route-source');
@@ -599,6 +658,19 @@ export default function GpsView({ data, isEmbedded = false }) {
       }
     }
   }, [routeGeoJson, mapLoaded]);
+
+  // 6.1 Atualização da Rota Alternativa no MapLibre GL
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded) return;
+    const altSource = mapInstanceRef.current.getSource('alternative-route-source');
+    if (altSource) {
+      if (alternativeGeoJson) {
+        altSource.setData(alternativeGeoJson);
+      } else {
+        altSource.setData({ type: 'FeatureCollection', features: [] });
+      }
+    }
+  }, [alternativeGeoJson, mapLoaded]);
 
   // 7. Atualização do Destino e Empresa no MapLibre GL
   useEffect(() => {
@@ -1061,8 +1133,48 @@ export default function GpsView({ data, isEmbedded = false }) {
         </button>
       )}
 
-      {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária */}
+      {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária e Seletor de Rotas Google Maps */}
       <div className={`gps-bottom-destination-card ${isEmbedded ? 'embedded-bottom-card' : ''}`}>
+        {/* Seletor de Rotas Inteligente Estilo Google Maps */}
+        {routes && routes.length > 1 && (
+          <div className="gps-route-options-shelf">
+            {routes.map((r) => {
+              const isSelected = r.id === activeRouteId;
+              const isAlt = r.id !== 'primary';
+              return (
+                <button
+                  key={r.id}
+                  id={`btn-route-${r.id}`}
+                  className={`gps-route-chip-card ${isSelected ? 'active-chip' : 'inactive-chip'}`}
+                  onClick={() => {
+                    selectRoute(r.id);
+                    if (r.id === 'primary') {
+                      speakVoice('Rota principal mais rápida selecionada.');
+                    } else {
+                      speakVoice(`Via alternativa selecionada. Mais ${r.diff_km}.`);
+                    }
+                  }}
+                  title={isAlt ? `Via alternativa: ${r.diff_km} (${r.diff_minutes})` : "Rota mais rápida recomendada"}
+                >
+                  <div className="chip-header">
+                    <span className="chip-dot" style={{ backgroundColor: isSelected ? '#00e5ff' : '#94a3b8' }} />
+                    <span className="chip-name">{r.name}</span>
+                    {isSelected && <span className="chip-selected-badge">ATIVA</span>}
+                  </div>
+                  <div className="chip-body">
+                    <span className="chip-km">{r.distance_km} km</span>
+                    {isAlt ? (
+                      <span className="chip-diff-loss">{r.diff_minutes} ({r.diff_km})</span>
+                    ) : (
+                      <span className="chip-diff-best">Mais rápida</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className={`destination-badge-yellow ${isGoingToPickup ? 'badge-pickup' : ''}`}>
           <Flag size={14} color="#ffffff" />
           <span className="dest-text">
