@@ -277,7 +277,7 @@ class ETS2Reader:
                 "income": int(d.get("jobIncome", 0) or 0) if on_job else 0,
                 "deadline": "Em andamento" if on_job else "--",
                 "onJob": on_job,
-                "isCargoLoaded": bool(d.get("isCargoLoaded", False) or (isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False))),
+                "isCargoLoaded": bool(d.get("isCargoLoaded", False)),
                 "trailerAttached": bool(isinstance(d.get("trailer"), list) and len(d.get("trailer")) > 0 and isinstance(d.get("trailer")[0], dict) and d.get("trailer")[0].get("attached", False)),
             },
             "navigation": {

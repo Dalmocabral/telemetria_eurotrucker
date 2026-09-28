@@ -5,6 +5,13 @@
 
 export const ETS2_ALL_CITIES = [
   {
+    "token": "truckersmp",
+    "name": "TruckersMP HQ",
+    "country": "poland",
+    "x": 23550.0,
+    "z": -2000.0
+  },
+  {
     "token": "aberdeen",
     "name": "Aberdeen",
     "country": "uk",

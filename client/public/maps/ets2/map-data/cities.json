@@ -1,5 +1,14 @@
 [
   {
+    "token": "truckersmp",
+    "name": "TruckersMP HQ",
+    "countryToken": "poland",
+    "population": 15000,
+    "x": 23550.0,
+    "y": -2000.0,
+    "areas": []
+  },
+  {
     "token": "aberdeen",
     "name": "Aberdeen",
     "countryToken": "uk",

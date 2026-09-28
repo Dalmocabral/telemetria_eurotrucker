@@ -1646,6 +1646,28 @@ body {
   cursor: pointer;
 }
 
+.badge-pickup {
+  border-color: #00e5ff !important;
+}
+
+.stage-toggle-btn {
+  background: rgba(0, 229, 255, 0.18);
+  border: 1px solid #00e5ff;
+  color: #00e5ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stage-toggle-btn:hover {
+  background: #00e5ff;
+  color: #050a14;
+}
+
 /* 6. Placa de Velocidade no GPS */
 .gps-floating-speed {
   position: absolute;

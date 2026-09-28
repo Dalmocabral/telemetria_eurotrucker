@@ -11,9 +11,29 @@ import math
 import array
 import heapq
 import time
+import unicodedata
+import re
 from typing import Dict, List, Tuple, Optional, Any
 
 MERCATOR_R = 300000.0
+
+
+def normalize_text(text: Optional[str]) -> str:
+    """Normaliza texto removendo acentos, diacríticos, pontuações e caixa alta."""
+    if not text:
+        return ""
+    nfd = unicodedata.normalize("NFD", str(text))
+    clean = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9]", "", clean.lower())
+
+
+# Localizações e hubs conhecidos de multiplayer/mods (TruckersMP, etc.)
+KNOWN_CUSTOM_LOCATIONS: Dict[str, Dict[str, Any]] = {
+    "truckersmp": {"token": "truckersmp", "name": "TruckersMP HQ", "x": 23550.0, "y": -2000.0, "country": "poland"},
+    "truckersmphq": {"token": "truckersmp", "name": "TruckersMP HQ", "x": 23550.0, "y": -2000.0, "country": "poland"},
+    "tmphq": {"token": "truckersmp", "name": "TruckersMP HQ", "x": 23550.0, "y": -2000.0, "country": "poland"},
+    "tmp": {"token": "truckersmp", "name": "TruckersMP HQ", "x": 23550.0, "y": -2000.0, "country": "poland"},
+}
 
 
 def convert_ets2_to_geo(game_x: float, game_z: float) -> Tuple[float, float]:
@@ -235,9 +255,29 @@ class RoadRouter:
         """
         c_id_clean = (city_dst_id or "").lower().strip()
         c_name_clean = (city_dst_name or "").lower().strip()
+        norm_id = normalize_text(city_dst_id)
+        norm_name = normalize_text(city_dst_name)
 
-        # 1. Localiza a cidade correspondente
+        # 1. Verifica hubs e locais especiais de multiplayer (ex: TruckersMP HQ)
+        for key in (norm_id, norm_name, c_id_clean, c_name_clean):
+            if key in KNOWN_CUSTOM_LOCATIONS:
+                custom_loc = KNOWN_CUSTOM_LOCATIONS[key]
+                cx = custom_loc["x"]
+                cy = custom_loc["y"]
+                clon, clat = convert_ets2_to_geo(cx, cy)
+                return {
+                    "coordinates": [float(clon), float(clat)],
+                    "name": custom_loc["name"],
+                    "city": custom_loc["name"],
+                    "city_token": custom_loc["token"],
+                    "is_company": True,
+                    "is_approximate": False,
+                    "description": f"{custom_loc['name']} (Multiplayer Hub)",
+                }
+
+        # 2. Localiza a cidade correspondente em self.cities
         target_city = None
+        # Passo 2A: Correspondência exata
         for c in self.cities:
             tok = c.get("token", "").lower()
             name = c.get("name", "").lower()
@@ -245,75 +285,123 @@ class RoadRouter:
                 target_city = c
                 break
 
+        # Passo 2B: Correspondência normalizada sem acentos (ex: Wroclaw == Wrocław, Koln == Köln)
         if not target_city:
-            return None
-
-        city_x = target_city.get("x", 0.0)
-        city_y = target_city.get("y", 0.0)
-        city_lon, city_lat = convert_ets2_to_geo(city_x, city_y)
-
-        # 2. Busca empresa/pátio dentro do raio de influência da cidade (~30 km)
-        comp_id_clean = (comp_dst_id or "").lower().strip()
-        comp_name_clean = (comp_dst_name or "").lower().strip()
-
-        # Se houver mapeamento de mods de empresas reais
-        alt_names = set()
-        if comp_id_clean in self.company_mappings:
-            entry = self.company_mappings[comp_id_clean]
-            alt_names.add(entry.get("name", "").lower())
-            alt_names.add(entry.get("sort_name", "").lower())
-
-        target_comp = None
-        if comp_id_clean or comp_name_clean or alt_names:
-            city_center = (city_lon, city_lat)
-            candidates = []
-            for feat in self.companies:
-                coords = feat.get("geometry", {}).get("coordinates", [])
-                if len(coords) >= 2 and geo_distance_meters(city_center, (coords[0], coords[1])) < 35000.0:
-                    candidates.append(feat)
-
-            # Prioridade 1: ID exato do sprite / token
-            for cand in candidates:
-                props = cand.get("properties", {})
-                sprite = props.get("sprite", "").lower()
-                if comp_id_clean and sprite == comp_id_clean:
-                    target_comp = cand
+            for c in self.cities:
+                c_tok_norm = normalize_text(c.get("token", ""))
+                c_name_norm = normalize_text(c.get("name", ""))
+                if (norm_id and (c_tok_norm == norm_id or c_name_norm == norm_id)) or \
+                   (norm_name and (c_name_norm == norm_name or c_tok_norm == norm_name)):
+                    target_city = c
                     break
 
-            # Prioridade 2: Nome da empresa coincide ou está contido
-            if not target_comp:
+        # Passo 2C: Correspondência por contenção parcial (ex: "stuttgart" in "stuttgart (de)")
+        if not target_city:
+            for c in self.cities:
+                c_tok_norm = normalize_text(c.get("token", ""))
+                c_name_norm = normalize_text(c.get("name", ""))
+                if norm_name and len(norm_name) >= 4 and (norm_name in c_name_norm or c_name_norm in norm_name):
+                    target_city = c
+                    break
+                if norm_id and len(norm_id) >= 4 and (norm_id in c_tok_norm or c_tok_norm in norm_id):
+                    target_city = c
+                    break
+
+        # 3. Se cidade encontrada, busca empresa próxima
+        if target_city:
+            city_x = target_city.get("x", 0.0)
+            city_y = target_city.get("y", 0.0)
+            city_lon, city_lat = convert_ets2_to_geo(city_x, city_y)
+
+            comp_id_clean = (comp_dst_id or "").lower().strip()
+            comp_name_clean = (comp_dst_name or "").lower().strip()
+            norm_comp_id = normalize_text(comp_dst_id)
+            norm_comp_name = normalize_text(comp_dst_name)
+
+            alt_names = set()
+            if comp_id_clean in self.company_mappings:
+                entry = self.company_mappings[comp_id_clean]
+                alt_names.add(entry.get("name", "").lower())
+                alt_names.add(entry.get("sort_name", "").lower())
+
+            target_comp = None
+            if comp_id_clean or comp_name_clean or alt_names:
+                city_center = (city_lon, city_lat)
+                candidates = []
+                for feat in self.companies:
+                    coords = feat.get("geometry", {}).get("coordinates", [])
+                    if len(coords) >= 2 and geo_distance_meters(city_center, (coords[0], coords[1])) < 40000.0:
+                        candidates.append(feat)
+
+                # Prioridade 1: ID exato do sprite / token
                 for cand in candidates:
                     props = cand.get("properties", {})
-                    pname = props.get("poiName", "").lower()
-                    if comp_name_clean and (comp_name_clean in pname or pname in comp_name_clean):
-                        target_comp = cand
-                        break
-                    if any(alt in pname for alt in alt_names if alt):
+                    sprite = props.get("sprite", "").lower()
+                    if comp_id_clean and sprite == comp_id_clean:
                         target_comp = cand
                         break
 
-        if target_comp:
-            coords = target_comp["geometry"]["coordinates"]
+                # Prioridade 2: Nome da empresa coincide ou está contido
+                if not target_comp:
+                    for cand in candidates:
+                        props = cand.get("properties", {})
+                        pname = props.get("poiName", "").lower()
+                        norm_pname = normalize_text(pname)
+                        if comp_name_clean and (comp_name_clean in pname or pname in comp_name_clean):
+                            target_comp = cand
+                            break
+                        if norm_comp_name and (norm_comp_name in norm_pname or norm_pname in norm_comp_name):
+                            target_comp = cand
+                            break
+                        if any(alt in pname for alt in alt_names if alt):
+                            target_comp = cand
+                            break
+
+            if target_comp:
+                coords = target_comp["geometry"]["coordinates"]
+                return {
+                    "coordinates": [float(coords[0]), float(coords[1])],
+                    "name": target_comp.get("properties", {}).get("poiName", comp_dst_name or "Empresa"),
+                    "city": target_city.get("name", "Destino"),
+                    "city_token": target_city.get("token", ""),
+                    "is_company": True,
+                    "is_approximate": False,
+                    "description": f"{target_comp.get('properties', {}).get('poiName')} ({target_city.get('name')})",
+                }
+
+            # Fallback aproximado no centro da cidade
             return {
-                "coordinates": [float(coords[0]), float(coords[1])],
-                "name": target_comp.get("properties", {}).get("poiName", comp_dst_name or "Empresa"),
+                "coordinates": [float(city_lon), float(city_lat)],
+                "name": target_city.get("name", "Destino"),
                 "city": target_city.get("name", "Destino"),
                 "city_token": target_city.get("token", ""),
-                "is_company": True,
-                "is_approximate": False,
-                "description": f"{target_comp.get('properties', {}).get('poiName')} ({target_city.get('name')})",
+                "is_company": False,
+                "is_approximate": True,
+                "description": f"Centro de {target_city.get('name')} (Destino aproximado)",
             }
 
-        # Fallback honesto: Centro da cidade claramente identificado como aproximado
-        return {
-            "coordinates": [float(city_lon), float(city_lat)],
-            "name": target_city.get("name", "Destino"),
-            "city": target_city.get("name", "Destino"),
-            "city_token": target_city.get("token", ""),
-            "is_company": False,
-            "is_approximate": True,
-            "description": f"Centro de {target_city.get('name')} (Destino aproximado)",
-        }
+        # 4. Fallback global: Se a cidade não estiver mapeada, mas a empresa existir (ex: Cargotras)
+        comp_id_clean = (comp_dst_id or "").lower().strip()
+        comp_name_clean = (comp_dst_name or "").lower().strip()
+        if comp_id_clean or comp_name_clean:
+            for feat in self.companies:
+                props = feat.get("properties", {})
+                sprite = props.get("sprite", "").lower()
+                pname = props.get("poiName", "").lower()
+                if (comp_id_clean and sprite == comp_id_clean) or (comp_name_clean and comp_name_clean in pname):
+                    coords = feat.get("geometry", {}).get("coordinates", [])
+                    if len(coords) >= 2:
+                        return {
+                            "coordinates": [float(coords[0]), float(coords[1])],
+                            "name": props.get("poiName", comp_dst_name or "Empresa"),
+                            "city": city_dst_name or city_dst_id or "Destino",
+                            "city_token": city_dst_id or "",
+                            "is_company": True,
+                            "is_approximate": True,
+                            "description": f"{props.get('poiName')} (Destino)",
+                        }
+
+        return None
 
     def calculate_route(
         self,

@@ -96,6 +96,9 @@ export default function GpsView({ data, isEmbedded = false }) {
     routeStatus,
     routeError,
     recalculateRoute,
+    isGoingToPickup,
+    canToggleStage,
+    toggleStage,
   } = useRoadRoute(placement, job, true);
 
   // 2. Inscrição unificada no WakeLockManager
@@ -1028,13 +1031,27 @@ export default function GpsView({ data, isEmbedded = false }) {
 
       {/* 7. Card Inferior de Destino / ETA com Rota Rodoviária */}
       <div className={`gps-bottom-destination-card ${isEmbedded ? 'embedded-bottom-card' : ''}`}>
-        <div className="destination-badge-yellow">
+        <div className={`destination-badge-yellow ${isGoingToPickup ? 'badge-pickup' : ''}`}>
           <Flag size={14} color="#ffffff" />
           <span className="dest-text">
-            {destinationInfo ? `${destinationInfo.name}: ` : (job?.cityDestination ? `${job.cityDestination}: ` : '')}
+            <strong>{isGoingToPickup ? '📦 Coleta: ' : '🏁 Entrega: '}</strong>
+            {destinationInfo ? `${destinationInfo.name}: ` : (isGoingToPickup ? (job?.citySource ? `${job.citySource}: ` : '') : (job?.cityDestination ? `${job.cityDestination}: ` : ''))}
             {routeStats?.distance_km ? `${routeStats.distance_km} km` : (nav.distance ? `${nav.distance} km` : '0 km')} • {nav.time || '--:--'}
             {job?.cargo && job.cargo !== 'Sem Carga' ? ` (${job.cargo})` : ''}
           </span>
+          {canToggleStage && (
+            <button
+              id="btn-gps-toggle-stage"
+              className="stage-toggle-btn"
+              title={isGoingToPickup ? "Ver rota até a Entrega Final" : "Ver rota até a Coleta na Fábrica"}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleStage();
+              }}
+            >
+              <span>{isGoingToPickup ? "Ir p/ Entrega ➔" : "➔ Ver Coleta"}</span>
+            </button>
+          )}
           <button 
             id="btn-gps-fit-route-bottom"
             className="dest-expand-btn" 

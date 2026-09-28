@@ -12,6 +12,7 @@ export function useRoadRoute(placement, job, enabled = true) {
   const [maneuvers, setManeuvers] = useState([]);
   const [routeStatus, setRouteStatus] = useState('idle'); // 'idle' | 'loading' | 'active' | 'error'
   const [routeError, setRouteError] = useState(null);
+  const [stageOverride, setStageOverride] = useState(null); // null ('auto') | 'pickup' | 'delivery'
 
   // Armazena a última rota e último destino roteado
   const lastRoutedDestKeyRef = useRef('');
@@ -25,7 +26,12 @@ export function useRoadRoute(placement, job, enabled = true) {
   const isOnJob = !!job?.onJob;
   const isCargoLoaded = !!job?.isCargoLoaded;
   const hasSource = Boolean(job?.citySource || job?.citySourceId || job?.companySource || job?.companySourceId);
-  const isGoingToPickup = isOnJob && !isCargoLoaded && hasSource;
+  const hasDestination = Boolean(job?.cityDestination || job?.cityDestinationId || job?.cityDst || job?.cityDstId);
+
+  // Prioriza o override manual do jogador se houver, senão segue o ciclo do ETS2
+  const isGoingToPickup = stageOverride === 'pickup' 
+    ? true 
+    : (stageOverride === 'delivery' ? false : (isOnJob && !isCargoLoaded && hasSource));
 
   const targetCity = isOnJob ? (isGoingToPickup ? (job?.citySource || job?.citySourceId) : (job?.cityDestination || job?.cityDestinationId || job?.cityDst)) : '';
   const targetCityId = isOnJob ? (isGoingToPickup ? (job?.citySourceId || '') : (job?.cityDestinationId || job?.cityDstId || '')) : '';
@@ -194,5 +200,18 @@ export function useRoadRoute(placement, job, enabled = true) {
     routeStatus,
     routeError,
     recalculateRoute: () => fetchRoute(true),
+    isGoingToPickup,
+    canToggleStage: isOnJob && hasSource && hasDestination,
+    toggleStage: () => {
+      setStageOverride(prev => {
+        const next = (prev === 'pickup') ? 'delivery' : (prev === 'delivery' ? 'pickup' : (isGoingToPickup ? 'delivery' : 'pickup'));
+        return next;
+      });
+      lastRoutedDestKeyRef.current = '';
+    },
+    setStage: (stage) => {
+      setStageOverride(stage);
+      lastRoutedDestKeyRef.current = '';
+    },
   };
 }
