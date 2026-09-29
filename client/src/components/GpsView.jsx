@@ -83,7 +83,10 @@ export default function GpsView({ data, isEmbedded = false }) {
   const animFrameIdRef = useRef(null);
   const lastRadarAlertIdRef = useRef('');
   const lastRadarAlertTimeRef = useRef(0);
-  const lastSpokenManeuverStageRef = useRef('');
+  const lastSpokenManeuverRef = useRef({ point: null, stages: new Set() });
+  const isSpeakingRef = useRef(false);
+  const lastSpeechTimeRef = useRef(0);
+  const lastSpokenTextRef = useRef('');
 
   const truck = data?.truck || {};
   const placement = data?.placement || { x: -28842.0, z: 4982.0, heading: 0 };
@@ -254,30 +257,64 @@ export default function GpsView({ data, isEmbedded = false }) {
     return () => unsubscribe();
   }, []);
 
-  // 3. Síntese de voz em Português (Exclusivo para avisos de radares e navegação)
-  const speakVoice = useCallback((text) => {
-    if (!voiceEnabled || !window.speechSynthesis) return;
+  // 3. Síntese de voz em Português com fila inteligente (sem cortar frases pela metade)
+  const speakVoice = useCallback((text, urgent = false) => {
+    if (!voiceEnabled || !window.speechSynthesis || !text) return;
     try {
+      const now = Date.now();
+      // Evita repetir exatamente a mesma frase em menos de 4 segundos
+      if (text === lastSpokenTextRef.current && now - lastSpeechTimeRef.current < 4000) {
+        return;
+      }
+
+      // Se não for urgente e estiver falando (ou falou há menos de 1.8s), não corta a frase em andamento
+      if (!urgent) {
+        if (window.speechSynthesis.speaking || isSpeakingRef.current || (now - lastSpeechTimeRef.current < 1800)) {
+          return;
+        }
+      }
+
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
-      window.speechSynthesis.cancel();
+
+      if (urgent) {
+        window.speechSynthesis.cancel();
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'pt-BR';
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
+
       const voices = window.speechSynthesis.getVoices();
       const brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.startsWith('pt')) || voices.find(v => v.lang.includes('pt'));
       if (brVoice) utterance.voice = brVoice;
+
+      utterance.onstart = () => {
+        isSpeakingRef.current = true;
+        lastSpeechTimeRef.current = Date.now();
+        lastSpokenTextRef.current = text;
+      };
+      utterance.onend = () => {
+        isSpeakingRef.current = false;
+        lastSpeechTimeRef.current = Date.now();
+      };
+      utterance.onerror = () => {
+        isSpeakingRef.current = false;
+      };
+
       setTimeout(() => {
         try {
           window.speechSynthesis.speak(utterance);
         } catch (err) {
+          isSpeakingRef.current = false;
           console.warn('Speech error:', err);
         }
-      }, 25);
+      }, urgent ? 30 : 15);
     } catch (e) {
+      isSpeakingRef.current = false;
       console.warn('Erro de voz:', e);
     }
   }, [voiceEnabled]);
@@ -629,7 +666,7 @@ export default function GpsView({ data, isEmbedded = false }) {
             map.getCanvas().style.cursor = '';
           });
 
-          // 1.2 Seta de Manobra na Pista (Estilo Google Maps / Imagem 2 - Traço Branco com Borda Escura sobre a curva)
+          // 1.2 Seta de Manobra na Pista (Traço Fluido Neon com Borda Escura sobre a curva e Ponto Luminoso de Ápice)
           map.addSource('maneuver-turn-arrow-source', {
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
@@ -639,6 +676,7 @@ export default function GpsView({ data, isEmbedded = false }) {
             id: 'maneuver-turn-arrow-casing',
             type: 'line',
             source: 'maneuver-turn-arrow-source',
+            filter: ['==', ['geometry-type'], 'LineString'],
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
               'line-color': '#020617',
@@ -651,11 +689,38 @@ export default function GpsView({ data, isEmbedded = false }) {
             id: 'maneuver-turn-arrow-core',
             type: 'line',
             source: 'maneuver-turn-arrow-source',
+            filter: ['==', ['geometry-type'], 'LineString'],
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
               'line-color': '#ffffff',
               'line-width': ['interpolate', ['linear'], ['zoom'], 5, 5.0, 8, 8.0, 11, 11.5, 14, 16.0],
               'line-opacity': 1.0,
+            },
+          });
+
+          map.addLayer({
+            id: 'maneuver-turn-beacon-ring',
+            type: 'circle',
+            source: 'maneuver-turn-arrow-source',
+            filter: ['==', ['geometry-type'], 'Point'],
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 8, 10, 14, 14, 20],
+              'circle-color': '#00e5ff',
+              'circle-opacity': 0.4,
+              'circle-stroke-color': '#ffffff',
+              'circle-stroke-width': 2.5,
+            },
+          });
+
+          map.addLayer({
+            id: 'maneuver-turn-beacon-dot',
+            type: 'circle',
+            source: 'maneuver-turn-arrow-source',
+            filter: ['==', ['geometry-type'], 'Point'],
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 4, 10, 6, 14, 8],
+              'circle-color': '#ffffff',
+              'circle-opacity': 1.0,
             },
           });
 
@@ -951,7 +1016,7 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
   }, [alternativeGeoJson, mapLoaded]);
 
-  // 6.2 Atualização da Seta de Manobra na Pista (desenhada sobre a linha da rota no local da curva)
+  // 6.2 Atualização da Seta de Manobra na Pista (desenhada sobre a linha da rota com antecedência de até 800m)
   useEffect(() => {
     if (!mapInstanceRef.current || !mapLoaded) return;
     const arrowSource = mapInstanceRef.current.getSource('maneuver-turn-arrow-source');
@@ -962,34 +1027,75 @@ export default function GpsView({ data, isEmbedded = false }) {
         coords.length > 5 && 
         activeManeuver && 
         activeManeuver.type !== 'destination' && 
-        activeManeuver.distanceMeters <= 600 &&
+        activeManeuver.distanceMeters <= 800 &&
         typeof activeManeuver.coord_index === 'number'
       ) {
         const cIdx = activeManeuver.coord_index;
-        const startSlice = Math.max(0, cIdx - 4);
-        const endSlice = Math.min(coords.length, cIdx + 5);
-        const arrowSlice = coords.slice(startSlice, endSlice);
+        const truckGeo = convertEts2ToGeo(placement.x, placement.z);
+
+        // Acha o índice da coordenada mais próxima do caminhão na rota
+        let closestIdx = 0;
+        let minD = Infinity;
+        for (let i = 0; i < coords.length; i++) {
+          const d = calcDistMeters(truckGeo, coords[i]);
+          if (d < minD) {
+            minD = d;
+            closestIdx = i;
+          }
+        }
+
+        // Calcula segmento métrico generoso: ~130m antes da curva e ~80m depois
+        let startIdx = cIdx;
+        let dBack = 0;
+        const extendToTruck = closestIdx < cIdx && (activeManeuver.distanceMeters <= 260);
+        while (startIdx > 0 && dBack < 130) {
+          if (extendToTruck && startIdx <= closestIdx) break;
+          dBack += calcDistMeters(coords[startIdx], coords[startIdx - 1]);
+          startIdx--;
+        }
+
+        let endIdx = cIdx;
+        let dFwd = 0;
+        while (endIdx < coords.length - 1 && dFwd < 80) {
+          dFwd += calcDistMeters(coords[endIdx], coords[endIdx + 1]);
+          endIdx++;
+        }
+
+        const arrowSlice = coords.slice(startIdx, endIdx + 1);
 
         if (arrowSlice.length >= 2) {
+          const features = [
+            {
+              type: 'Feature',
+              properties: { type: activeManeuver.type, role: 'trajectory' },
+              geometry: {
+                type: 'LineString',
+                coordinates: arrowSlice,
+              },
+            },
+          ];
+
+          if (activeManeuver.point) {
+            features.push({
+              type: 'Feature',
+              properties: { type: activeManeuver.type, role: 'beacon' },
+              geometry: {
+                type: 'Point',
+                coordinates: activeManeuver.point,
+              },
+            });
+          }
+
           arrowSource.setData({
             type: 'FeatureCollection',
-            features: [
-              {
-                type: 'Feature',
-                properties: { type: activeManeuver.type },
-                geometry: {
-                  type: 'LineString',
-                  coordinates: arrowSlice,
-                },
-              },
-            ],
+            features,
           });
           return;
         }
       }
       arrowSource.setData({ type: 'FeatureCollection', features: [] });
     }
-  }, [routeGeoJson, activeManeuver, mapLoaded]);
+  }, [routeGeoJson, activeManeuver, placement.x, placement.z, mapLoaded]);
 
   // 6.3 Atualização do Marcador Piscante do Radar no Mapa no Ponto Exato
   useEffect(() => {
@@ -1170,38 +1276,50 @@ export default function GpsView({ data, isEmbedded = false }) {
     }
   };
 
-  // 11. Gatilhos de Voz em Português estilo Waze / Google Maps
+  // 11. Gatilhos de Voz em Português estilo Waze / Google Maps (Estável por Proximidade Geográfica)
   useEffect(() => {
     if (!voiceEnabled || !activeManeuver || routeStatus !== 'active') return;
     const dist = activeManeuver.distanceMeters;
-    const mId = `${activeManeuver.coord_index}_${activeManeuver.type}`;
+    const pt = activeManeuver.point;
     const instr = activeManeuver.instruction;
 
+    if (!pt) return;
+
+    // Se a distância geográfica até a última curva falada for maior que 90 metros, é uma nova curva
+    const lastPt = lastSpokenManeuverRef.current.point;
+    const isSameManeuver = lastPt ? calcDistMeters(pt, lastPt) < 90 : false;
+
+    if (!isSameManeuver) {
+      lastSpokenManeuverRef.current = { point: pt, stages: new Set() };
+    }
+
+    const stages = lastSpokenManeuverRef.current.stages;
+
     if (activeManeuver.type === 'destination') {
-      if (dist <= 600 && dist > 400 && lastSpokenManeuverStageRef.current !== `${mId}_600`) {
-        lastSpokenManeuverStageRef.current = `${mId}_600`;
+      if (dist <= 600 && dist > 350 && !stages.has('dest_500')) {
+        stages.add('dest_500');
         speakVoice(`A 500 metros, seu destino final.`);
-      } else if (dist <= 60 && lastSpokenManeuverStageRef.current !== `${mId}_arrived`) {
-        lastSpokenManeuverStageRef.current = `${mId}_arrived`;
-        speakVoice(`Você chegou ao seu destino.`);
+      } else if (dist <= 60 && !stages.has('dest_arrived')) {
+        stages.add('dest_arrived');
+        speakVoice(`Você chegou ao seu destino.`, true);
       }
       return;
     }
 
-    // Pré-aviso a ~500 metros
-    if (dist <= 520 && dist > 320 && lastSpokenManeuverStageRef.current !== `${mId}_500`) {
-      lastSpokenManeuverStageRef.current = `${mId}_500`;
+    // Pré-aviso a ~500 metros (faixa 340m a 550m)
+    if (dist <= 550 && dist > 320 && !stages.has('stage_500')) {
+      stages.add('stage_500');
       speakVoice(`A 500 metros, ${instr.toLowerCase()}.`);
     }
-    // Segundo aviso a ~200 metros
-    else if (dist <= 250 && dist > 90 && lastSpokenManeuverStageRef.current !== `${mId}_200`) {
-      lastSpokenManeuverStageRef.current = `${mId}_200`;
+    // Segundo aviso a ~200 metros (faixa 90m a 260m)
+    else if (dist <= 260 && dist > 90 && !stages.has('stage_200')) {
+      stages.add('stage_200');
       speakVoice(`A 200 metros, ${instr.toLowerCase()}.`);
     }
-    // Aviso imediato no momento da curva (40 a 75 metros)
-    else if (dist <= 75 && dist > 15 && lastSpokenManeuverStageRef.current !== `${mId}_now`) {
-      lastSpokenManeuverStageRef.current = `${mId}_now`;
-      speakVoice(`${instr} agora.`);
+    // Aviso imediato no momento da curva (15 a 75 metros) - urgente!
+    else if (dist <= 75 && dist > 15 && !stages.has('stage_now')) {
+      stages.add('stage_now');
+      speakVoice(`${instr} agora.`, true);
     }
   }, [activeManeuver, voiceEnabled, routeStatus, speakVoice]);
 

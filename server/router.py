@@ -872,26 +872,30 @@ class RoadRouter:
 
         maneuvers = []
         for idx, d, diff, pt in clustered:
-            if diff > 60.0:
-                if diff > 95.0:
+            # diff < 0 é curva no sentido horário (DIREITA na malha cartográfica)
+            # diff > 0 é curva no sentido anti-horário (ESQUERDA na malha cartográfica)
+            if diff < -20.0:
+                if diff < -95.0:
                     m_type = "sharp-right"
                     turn_text = "Curva acentuada à direita"
-                else:
+                elif diff < -50.0:
                     m_type = "right"
                     turn_text = "Vire à direita"
-            elif diff >= 20.0:
-                m_type = "slight-right"
-                turn_text = "Mantenha à direita"
-            elif diff < -60.0:
-                if diff < -95.0:
+                else:
+                    m_type = "slight-right"
+                    turn_text = "Mantenha à direita"
+            elif diff > 20.0:
+                if diff > 95.0:
                     m_type = "sharp-left"
                     turn_text = "Curva acentuada à esquerda"
-                else:
+                elif diff > 50.0:
                     m_type = "left"
                     turn_text = "Vire à esquerda"
+                else:
+                    m_type = "slight-left"
+                    turn_text = "Mantenha à esquerda"
             else:
-                m_type = "slight-left"
-                turn_text = "Mantenha à esquerda"
+                continue
 
             pt_before = coords[max(0, idx - 4)]
             pt_after = coords[min(len(coords) - 1, idx + 4)]
